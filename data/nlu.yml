@@ -1,0 +1,144 @@
+version: "3.1"
+
+nlu:
+- intent: greet
+  examples: |
+    - hey
+    - hello
+    - hi
+    - hello there
+    - good morning
+    - good evening
+    - moin
+    - hey there
+    - let's go
+    - hey dude
+    - goodmorning
+    - goodevening
+    - good afternoon
+
+- intent: goodbye
+  examples: |
+    - cu
+    - good by
+    - cee you later
+    - good night
+    - bye
+    - goodbye
+    - have a nice day
+    - see you around
+    - bye bye
+    - see you later
+
+- intent: affirm
+  examples: |
+    - yes
+    - y
+    - indeed
+    - of course
+    - that sounds good
+    - correct
+
+- intent: deny
+  examples: |
+    - no
+    - n
+    - never
+    - I don't think so
+    - don't like that
+    - no way
+    - not really
+
+- intent: mood_great
+  examples: |
+    - perfect
+    - great
+    - amazing
+    - feeling like a king
+    - wonderful
+    - I am feeling very good
+    - I am great
+    - I am amazing
+    - I am going to save the world
+    - super stoked
+    - extremely good
+    - so so perfect
+    - so good
+    - so perfect
+
+- intent: mood_unhappy
+  examples: |
+    - my day was horrible
+    - I am sad
+    - I don't feel very well
+    - I am disappointed
+    - super sad
+    - I'm so sad
+    - sad
+    - very sad
+    - unhappy
+    - not good
+    - not very good
+    - extremly sad
+    - so saad
+    - so sad
+
+- intent: bot_challenge
+  examples: |
+    - are you a bot?
+    - are you a human?
+    - am I talking to a bot?
+    - am I talking to a human?
+
+- intent: ask_weather
+  examples: |
+    - what is the weather like today?
+    - what is the weather in Berlin?
+    - what is the weather?
+    - is it going to rain today?
+    - tell me the weather
+    - how is the weather in London?
+    - what is the weather in London?
+    - what is the weather in Paris?
+    - what is the weather in New York?
+    - what is the weather in San Francisco?
+    - what is the weather in Sydney?
+    - what is the weather in Tokyo?
+    - what is the weather in Toronto?
+    - what is the weather in Madrid?
+    - what is the weather in Rome?
+    - what is the weather in Barcelona?
+    - what is the weather in Amsterdam?
+    - what is the weather in Vienna?
+    - what is the weather in Munich?
+    - what is the weather in Hamburg?
+    - what is the weather in Frankfurt?
+    - what is the weather in Stuttgart?
+    - what is the weather in Cologne?
+    - what is the weather in Düsseldorf?
+    - what is the weather in Dortmund?
+    - what is the weather in Essen?
+    - what is the weather in Bremen?
+    - what is the weather in Dresden?
+    - what is the weather in Leipzig?
+    - what is the weather in Nuremberg?
+    - what is the weather in Duisburg?
+    - what is the weather in Bochum?
+    - what is the weather in Wuppertal?
+    - what is the weather in Bielefeld?
+    - what is the weather in Bonn?
+    - what is the weather in Münster?
+    - what is the weather in Karlsruhe?
+    - what is the weather in Mannheim?
+    - what is the weather in Augsburg?
+    - what is the weather in Wiesbaden?
+    - what is the weather in Gelsenkirchen?
+    - what is the weather in Mönchengladbach?
+    - what is the weather in Braunschweig?
+    - what is the weather in Kiel?
+    - what is the weather in Aachen?
+    - what is the weather in Chemnitz?
+    - what is the weather in Halle?
+    - what is the weather in Magdeburg?
+    - what is the weather in Freiburg?
+    - what is the weather in Krefeld?
