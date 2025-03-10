@@ -90,55 +90,36 @@ nlu:
     - am I talking to a bot?
     - am I talking to a human?
 
-- intent: ask_weather
+- intent: ask_hello_world
   examples: |
-    - what is the weather like today?
-    - what is the weather in Berlin?
-    - what is the weather?
-    - is it going to rain today?
-    - tell me the weather
-    - how is the weather in London?
-    - what is the weather in London?
-    - what is the weather in Paris?
-    - what is the weather in New York?
-    - what is the weather in San Francisco?
-    - what is the weather in Sydney?
-    - what is the weather in Tokyo?
-    - what is the weather in Toronto?
-    - what is the weather in Madrid?
-    - what is the weather in Rome?
-    - what is the weather in Barcelona?
-    - what is the weather in Amsterdam?
-    - what is the weather in Vienna?
-    - what is the weather in Munich?
-    - what is the weather in Hamburg?
-    - what is the weather in Frankfurt?
-    - what is the weather in Stuttgart?
-    - what is the weather in Cologne?
-    - what is the weather in Düsseldorf?
-    - what is the weather in Dortmund?
-    - what is the weather in Essen?
-    - what is the weather in Bremen?
-    - what is the weather in Dresden?
-    - what is the weather in Leipzig?
-    - what is the weather in Nuremberg?
-    - what is the weather in Duisburg?
-    - what is the weather in Bochum?
-    - what is the weather in Wuppertal?
-    - what is the weather in Bielefeld?
-    - what is the weather in Bonn?
-    - what is the weather in Münster?
-    - what is the weather in Karlsruhe?
-    - what is the weather in Mannheim?
-    - what is the weather in Augsburg?
-    - what is the weather in Wiesbaden?
-    - what is the weather in Gelsenkirchen?
-    - what is the weather in Mönchengladbach?
-    - what is the weather in Braunschweig?
-    - what is the weather in Kiel?
-    - what is the weather in Aachen?
-    - what is the weather in Chemnitz?
-    - what is the weather in Halle?
-    - what is the weather in Magdeburg?
-    - what is the weather in Freiburg?
-    - what is the weather in Krefeld?
+    - what is your favorite expression?
+    - say something
+
+- intent: ask_clarification
+  examples: |
+    - What is
+    - What does
+    - What do you mean by
+    - What is the meaning of
+    - What is the definition of
+    - What is the explanation of
+    - What is the clarification of
+    - Explain
+    - Define
+    - Clarify
+    - Can you clarify
+    - Can you explain
+    - Can you define
+    - Can you tell me
+    - Can you tell me about
+    - Can you tell me the meaning of
+    - Can you tell me the definition of
+    - Tell me about 
+    - Tell me the meaning of
+    - Tell me the definition of
+    - Tell me the explanation of
+    - Tell me the clarification of
+    - Tell me the definition of
+    - What is the meaning of
+    - What is the definition of
+    - What is the explanation of
