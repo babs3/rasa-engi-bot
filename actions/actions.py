@@ -34,8 +34,10 @@ class ActionHelloWorld(Action):
 # Load sentence transformer model
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
+#print("GENAI KEY: "+os.getenv("GENAI_API_KEY"))
+
 # Set up Google Gemini API Key
-genai.configure(api_key=os.getenv("GENAI_API_KEY"))
+genai.configure(api_key="paste genai key here")#os.getenv("GENAI_API_KEY"))
 
 # Connect to ChromaDB
 VECTOR_DB_PATH = "vector_store"

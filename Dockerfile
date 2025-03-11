@@ -3,7 +3,6 @@ FROM rasa/rasa-sdk:3.6.2
 WORKDIR /app
 
 COPY ./actions/requirements.txt /app/requirements.txt
-COPY ./.env /app/.env
 COPY ./vector_store /app/vector_store
 
 USER root
