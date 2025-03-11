@@ -9,15 +9,11 @@ Build the actions container
 docker build . -t rasa/rasa-sdk:3.6.2
 ```
 
-Run the actions container
-```
-docker run -d -v ${pwd}/actions:/app/actions --net my-project --name action-server rasa/rasa-sdk:3.6.2
-```
-(Or with the `.env` file)
+Run the actions container passing `.env` file contents
 ```
 docker run -d -v ${pwd}/actions:/app/actions --net my-project --name action-server --env-file .env rasa/rasa-sdk:3.6.2
 ```
-**Note:** the `.env` file must contain keys in the form `key_name=secret_value`
+**Note:** the `.env` file must be on root directory and must contain keys in the form `key_name=secret_value`
 
 Talk to the bot in a shell
 ```
