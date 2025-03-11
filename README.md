@@ -14,3 +14,7 @@ To remove all the containers:
 ```
 docker rm $(docker ps -aq)
 ```
+To create the network to connect containers:
+```
+docker network create my-project
+```
