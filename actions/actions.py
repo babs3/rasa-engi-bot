@@ -170,8 +170,8 @@ class ActionFetchClassMaterial(Action):
 
         return  [
             SlotSet("user_query", query),  # Store the query
-            SlotSet("materials_location", gemini_results),  # Store selected materials
-            FollowupAction("action_get_class_material_location")  # Call the next action
+            SlotSet("materials_location", gemini_results)#,  # Store selected materials
+            #FollowupAction("action_get_class_material_location")  # Call the next action
             ]
 
 

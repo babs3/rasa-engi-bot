@@ -16,3 +16,4 @@ rules:
   steps:
     - intent: ask_clarification
     - action: action_fetch_class_material
+    - action: action_get_class_material_location
