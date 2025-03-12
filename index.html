@@ -2,9 +2,76 @@
 <html>
     <head>
         <title>RASA Chatbot</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                background-color: #f0f0f0;
+                font-family: Arial, sans-serif;
+            }
+
+            #login-form {
+                display: flex;
+                flex-direction: column;
+                background: white;
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            }
+
+            input {
+                margin-bottom: 10px;
+                padding: 10px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+            }
+
+            button {
+                padding: 10px;
+                border-radius: 5px;
+                border: none;
+                background-color: #007bff;
+                color: white;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+
+            button:hover {
+                background-color: #0056b3;
+            }
+
+            #rasa-chat-widget-container{
+                display: none;
+            }
+
+        </style>
     </head>
     <body>
+        <div id="login-form">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button onclick="authenticateUser()">Login</button>
+        </div>
+
         <div id="rasa-chat-widget" data-websocket-url="http://localhost:5005/socket.io"></div>
-        <script src="https://unpkg.com/@rasahq/rasa-chat" type="application/javascript"></script>
+        <script src="https://unpkg.com/@rasahq/rasa-chat"></script>
+        <script>
+            function authenticateUser() {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                if (username === 'name' && password === 'pass') {
+                    document.getElementById('login-form').style.display = 'none';
+                    document.getElementById('rasa-chat-widget-container').style.display = 'block';
+                } else {
+                    alert('Invalid username or password');
+                }
+            }
+        </script>
     </body>
 </html>
