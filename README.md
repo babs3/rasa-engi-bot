@@ -20,6 +20,11 @@ Talk to the bot in a shell
 docker run -it -v ${pwd}:/app -p 5005:5005 --net my-project rasa/rasa:3.6.20-full shell
 ```
 
+Talk to the bot on website (open index.html on browser)
+```
+docker run -it -v ${pwd}:/app -p 5005:5005 --net my-project rasa/rasa:3.6.20-full run --enable-api --cors "*" --connector socketio --debug
+```
+
 ---
 ### Additional commands:
 To remove all the containers:
