@@ -90,10 +90,6 @@ nlu:
     - am I talking to a bot?
     - am I talking to a human?
 
-- intent: ask_hello_world
-  examples: |
-    - what is your favorite expression?
-    - say something
 
 - intent: ask_clarification
   examples: |
