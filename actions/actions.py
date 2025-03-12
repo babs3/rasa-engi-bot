@@ -98,12 +98,11 @@ class ActionFetchClassMaterial(Action):
         alpha = 0.7  # Balance factor between vector & keyword search
 
         for doc, meta, score in zip(vector_docs, vector_metadata, vector_scores):
-            hybrid_score = alpha * score + (1 - alpha) * 0  # BM25 score unavailable for vectors
+            hybrid_score = alpha * score
             hybrid_results.append((doc, meta, hybrid_score))
 
-        alpha = 0.3 
         for doc, meta, score in zip(bm25_docs, bm25_metadata_selected, bm25_scores_selected):
-            hybrid_score = alpha * 0 + (1 - alpha) * score  # Vector score unavailable for BM25
+            hybrid_score = (1 - alpha) * score 
             hybrid_results.append((doc, meta, hybrid_score))
 
         # Sort results by hybrid score
@@ -170,8 +169,7 @@ class ActionFetchClassMaterial(Action):
 
         return  [
             SlotSet("user_query", query),  # Store the query
-            SlotSet("materials_location", gemini_results)#,  # Store selected materials
-            #FollowupAction("action_get_class_material_location")  # Call the next action
+            SlotSet("materials_location", gemini_results)  # Store selected materials
             ]
 
 
@@ -217,27 +215,28 @@ class ActionGetClassMaterialLocation(Action):
         location_results = []
         document_entries = []  # Store documents before sorting
 
+        # Tokenize the document text
+        document_tokens = extract_complex_tokens(document_text)
+
         for i in top_indices:
             file_name = bm25_metadata[i]["file"]
             page_number = bm25_metadata[i]["page"]
             document_text = bm25_documents[i]
 
-            # Tokenize the document text
-            document_tokens = extract_complex_tokens(document_text)
-
             # Perform fuzzy matching -> solves matches like 'external environment analysis\npestel analysis'
             if fuzzy_match(expanded_complex, document_tokens):
                 document_entries.append((file_name, page_number))
-        
+
         if len(document_entries) == 0:
             print("\n👻 --> No matching for Complex Tokens")
+
+            # Tokenize the document text
+            simple_document_tokens = extract_simple_tokens(document_text)
+
             for i in top_indices:
                 file_name = bm25_metadata[i]["file"]
                 page_number = bm25_metadata[i]["page"]
                 document_text = bm25_documents[i]
-
-                # Tokenize the document text
-                simple_document_tokens = extract_simple_tokens(document_text)
 
                 # ✅ Ensure at least one "specific" word is found before allowing generic matches
                 contains_specific = any(fuzzy_match([word], simple_document_tokens) for word in specific_terms)
