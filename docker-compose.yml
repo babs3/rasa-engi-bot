@@ -1,0 +1,47 @@
+version: '3.8'
+services:
+  rasa:
+    image: rasa/rasa:3.6.20-full
+    volumes:
+      - .:/app
+    ports:
+      - 5005:5005
+    networks:
+      - my-project
+    command: run --enable-api --cors "*" --connector socketio
+
+  action-server:
+    build:
+      context: .
+      dockerfile: actions/Dockerfile
+    volumes:
+      - ./actions:/app/actions
+      - ./db:/app/db  # Persist database
+    ports:
+      - 5000:5000
+    networks:
+      - my-project
+    environment:
+      DB_TYPE: "postgres"
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "chatbotdb"
+      GENAI_API_KEY: "${GENAI_API_KEY}"  # Add this line to load from .env
+
+  db:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "chatbotdb"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - my-project
+
+networks:
+  my-project:
+
+volumes:
+  postgres_data:

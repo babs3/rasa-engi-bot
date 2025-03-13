@@ -4,10 +4,9 @@ WORKDIR /app
 
 COPY ./actions/requirements.txt /app/requirements.txt
 COPY ./vector_store /app/vector_store
+COPY ./actions /app/actions
 
 USER root
-
-COPY ./actions /app/actions
 
 RUN pip install -r /app/requirements.txt
 RUN python -m spacy download en_core_web_sm
@@ -25,6 +24,12 @@ ENV TRANSFORMERS_CACHE=/app/cache
 # Create cache directory with appropriate permissions
 RUN mkdir -p /app/cache && chown -R 1000:1000 /app/cache
 
+# Ensure database folder exists
+RUN mkdir -p /app/db
+
 USER 1000
 
+# Start Rasa Actions and Flask API
+#CMD ["sh", "-c", "rasa run actions & python /app/actions/auth_api.py && wait"]
 CMD ["start", "--actions", "actions"]
+

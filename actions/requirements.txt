@@ -19,3 +19,8 @@ requests
 transformers
 torch
 spacy
+flask
+flask-bcrypt
+flask-sqlalchemy
+flask-cors
+psycopg2-binary  # Only for PostgreSQL
