@@ -15,6 +15,22 @@ Open ```http://localhost:8080/``` to test the bot.
 
 **Note:** the `.env` file must be on root directory and must contain keys in the form `key_name=secret_value`
 
----
-### Additional commands:
-To remove all stopped containers: ```docker rm $(docker ps -aq)```
+
+## How to Visualize the Database?
+
+Access the PostgreSQL container:
+```
+docker exec -it rasa-engi-bot-db-1 psql -U admin -d chatbotdb
+```
+Show the structure of the user table:
+```
+\d user
+```
+View all records in the user table:
+```
+SELECT * FROM "user";
+```
+Exit PostgreSQL container:
+```
+\q
+```
