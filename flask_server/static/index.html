@@ -68,21 +68,22 @@
                     <option value="student">Student</option>
                     <option value="teacher">Teacher</option>
                 </select>
-                
-                <!--<div id="student-fields" style="display: none;">
+
+                <div id="student-fields" style="display: none;">
                     <input type="text" id="up_id" placeholder="UP ID">
                     <input type="text" id="course" placeholder="Course">
                     <input type="text" id="year" placeholder="Year">
                 </div>
 
                 <div id="teacher-fields" style="display: none;">
-                    <label>Select Courses:</label>
-                    <input type="checkbox" name="courses" value="Math"> Math
-                    <input type="checkbox" name="courses" value="Physics"> Physics
-                    <input type="checkbox" name="courses" value="Computer Science"> Computer Science
-                </div>-->
+                    <label>Select Courses:</label><br>
+                    <input type="checkbox" name="courses" value="Math"> Math<br>
+                    <input type="checkbox" name="courses" value="Physics"> Physics<br>
+                    <input type="checkbox" name="courses" value="Computer Science"> Computer Science<br>
+                </div>
 
                 <input type="password" id="register-password" placeholder="Password" required>
+
                 <button onclick="register()">Register</button>
                 <p>Already have an account? <a href="#" onclick="toggleForms()">Login</a></p>
             </div>
@@ -101,8 +102,8 @@
             
             function toggleRoleFields() {
                 const role = document.getElementById('role').value;
-                //document.getElementById('student-fields').style.display = role === 'student' ? 'block' : 'none';
-                //document.getElementById('teacher-fields').style.display = role === 'teacher' ? 'block' : 'none';
+                document.getElementById('student-fields').style.display = role === 'student' ? 'block' : 'none';
+                document.getElementById('teacher-fields').style.display = role === 'teacher' ? 'block' : 'none';
             }
         
             function register() {
@@ -113,13 +114,14 @@
                     role: role
                 };
 
-                /*if (role === "student") {
+                if (role === "student") {
                     data.up_id = document.getElementById("up_id").value;
                     data.course = document.getElementById("course").value;
                     data.year = document.getElementById("year").value;
-                } else {
-                    data.courses = document.getElementById("courses").value.split(",");
-                }*/
+                } else if (role === "teacher") {
+                    const selectedCourses = Array.from(document.querySelectorAll('input[name="courses"]:checked')).map(cb => cb.value);
+                    data.courses = selectedCourses;
+                }
 
                 fetch("/register", {
                     method: "POST",
@@ -128,7 +130,6 @@
                 }).then(response => response.json())
                 .then(data => {
                     alert(data.message || data.error)
-                    // call showChat() if registration is successful
                     if (data.message) showChat();
                 });
             }
