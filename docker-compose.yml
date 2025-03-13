@@ -39,6 +39,15 @@ services:
     networks:
       - my-project
 
+  flask-server:
+    build:
+      context: ./flask_server
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    networks:
+      - my-project
+
 networks:
   my-project:
 
