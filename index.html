@@ -15,7 +15,7 @@
                 font-family: Arial, sans-serif;
             }
 
-            #login-form {
+            .form-container {
                 display: flex;
                 flex-direction: column;
                 background: white;
@@ -24,7 +24,7 @@
                 box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             }
 
-            input {
+            input, select {
                 margin-bottom: 10px;
                 padding: 10px;
                 border-radius: 5px;
@@ -45,25 +45,69 @@
                 background-color: #0056b3;
             }
 
-            #rasa-chat-widget-container{
+            #rasa-chat-widget-container {
                 display: none;
             }
-
         </style>
     </head>
     <body>
-        <div id="login-form">
-            <input type="text" id="username" placeholder="Username" required>
-            <input type="password" id="password" placeholder="Password" required>
+        <div id="login-form" class="form-container">
+            <h2>Login</h2>
+            <input type="email" id="login-email" placeholder="Email" required>
+            <input type="password" id="login-password" placeholder="Password" required>
             <button onclick="authenticateUser()">Login</button>
+            <p>Don't have an account? <a href="#" onclick="toggleForms()">Register</a></p>
+        </div>
+
+        <div id="register-form" class="form-container" style="display: none;">
+            <h2>Register</h2>
+            <input type="text" id="name" placeholder="Name" required>
+            <select id="role" onchange="toggleRoleFields()">
+                <option value="">Select Role</option>
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+            </select>
+            
+            <div id="student-fields" style="display: none;">
+                <input type="text" id="up-id" placeholder="UP ID">
+                <input type="text" id="course" placeholder="Course">
+                <input type="text" id="year" placeholder="Year">
+                <input type="email" id="college-email" placeholder="College Email">
+            </div>
+
+            <div id="teacher-fields" style="display: none;">
+                <input type="email" id="teacher-email" placeholder="Email">
+                <label>Select Courses:</label>
+                <input type="checkbox" name="courses" value="Math"> Math
+                <input type="checkbox" name="courses" value="Physics"> Physics
+                <input type="checkbox" name="courses" value="Computer Science"> Computer Science
+            </div>
+
+            <input type="password" id="register-password" placeholder="Password" required>
+            <button onclick="registerUser()">Register</button>
+            <p>Already have an account? <a href="#" onclick="toggleForms()">Login</a></p>
         </div>
 
         <div id="rasa-chat-widget" data-websocket-url="http://localhost:5005/socket.io"></div>
         <script src="https://unpkg.com/@rasahq/rasa-chat"></script>
         <script>
+            function toggleForms() {
+                document.getElementById('login-form').style.display =
+                    document.getElementById('login-form').style.display === 'none' ? 'block' : 'none';
+                document.getElementById('register-form').style.display =
+                    document.getElementById('register-form').style.display === 'none' ? 'block' : 'none';
+            }
+            
+            function toggleRoleFields() {
+                const role = document.getElementById('role').value;
+                document.getElementById('student-fields').style.display = role === 'student' ? 'block' : 'none';
+                document.getElementById('teacher-fields').style.display = role === 'teacher' ? 'block' : 'none';
+            }
+            
             function authenticateUser() {
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
+                
+                const username = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
 
                 if (username === 'name' && password === 'pass') {
                     document.getElementById('login-form').style.display = 'none';
@@ -71,6 +115,10 @@
                 } else {
                     alert('Invalid username or password');
                 }
+            }
+            
+            function registerUser() {
+                alert('Registration functionality to be implemented!');
             }
         </script>
     </body>

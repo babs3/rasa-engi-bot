@@ -215,13 +215,13 @@ class ActionGetClassMaterialLocation(Action):
         location_results = []
         document_entries = []  # Store documents before sorting
 
-        # Tokenize the document text
-        document_tokens = extract_complex_tokens(document_text)
-
         for i in top_indices:
             file_name = bm25_metadata[i]["file"]
             page_number = bm25_metadata[i]["page"]
             document_text = bm25_documents[i]
+
+            # Tokenize the document text
+            document_tokens = extract_complex_tokens(document_text)
 
             # Perform fuzzy matching -> solves matches like 'external environment analysis\npestel analysis'
             if fuzzy_match(expanded_complex, document_tokens):
@@ -230,13 +230,13 @@ class ActionGetClassMaterialLocation(Action):
         if len(document_entries) == 0:
             print("\n👻 --> No matching for Complex Tokens")
 
-            # Tokenize the document text
-            simple_document_tokens = extract_simple_tokens(document_text)
-
             for i in top_indices:
                 file_name = bm25_metadata[i]["file"]
                 page_number = bm25_metadata[i]["page"]
                 document_text = bm25_documents[i]
+                
+                # Tokenize the document text
+                simple_document_tokens = extract_simple_tokens(document_text)
 
                 # ✅ Ensure at least one "specific" word is found before allowing generic matches
                 contains_specific = any(fuzzy_match([word], simple_document_tokens) for word in specific_terms)
