@@ -3,13 +3,9 @@ Train a model
 ```
 docker run -v ${PWD}:/app rasa/rasa:3.6.20-full train
 ```
-When you update your Dockerfile, change dependencies, or modify code and need fresh images.
+Start Containers
 ```
-docker-compose up --build
-```
-When you just want to restart your containers quickly without rebuilding (e.g., after restarting your machine).
-```
-docker-compose up -d
+docker-compose up -d --build
 ```
 Stop Containers Gracefully
 ```
