@@ -51,45 +51,46 @@
         </style>
     </head>
     <body>
-        <div id="login-form" class="form-container">
-            <h2>Login</h2>
-            <input type="email" id="login-email" placeholder="Email" required>
-            <input type="password" id="login-password" placeholder="Password" required>
-            <button onclick="authenticateUser()">Login</button>
-            <p>Don't have an account? <a href="#" onclick="toggleForms()">Register</a></p>
-        </div>
-
-        <div id="register-form" class="form-container" style="display: none;">
-            <h2>Register</h2>
-            <input type="text" id="name" placeholder="Name" required>
-            <select id="role" onchange="toggleRoleFields()">
-                <option value="">Select Role</option>
-                <option value="student">Student</option>
-                <option value="teacher">Teacher</option>
-            </select>
-            
-            <div id="student-fields" style="display: none;">
-                <input type="text" id="up-id" placeholder="UP ID">
-                <input type="text" id="course" placeholder="Course">
-                <input type="text" id="year" placeholder="Year">
-                <input type="email" id="college-email" placeholder="College Email">
+        <div id="auth-container">
+            <div id="login-form" class="form-container">
+                <h2>Login</h2>
+                <input type="email" id="login-email" placeholder="Email" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <button onclick="login()">Login</button>
+                <p>Don't have an account? <a href="#" onclick="toggleForms()">Register</a></p>
             </div>
 
-            <div id="teacher-fields" style="display: none;">
-                <input type="email" id="teacher-email" placeholder="Email">
-                <label>Select Courses:</label>
-                <input type="checkbox" name="courses" value="Math"> Math
-                <input type="checkbox" name="courses" value="Physics"> Physics
-                <input type="checkbox" name="courses" value="Computer Science"> Computer Science
-            </div>
+            <div id="register-form" class="form-container" style="display: none;">
+                <h2>Register</h2>
+                <input type="email" id="register-email" placeholder="Email" required>
+                <select id="role" onchange="toggleRoleFields()">
+                    <option value="">Select Role</option>
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                </select>
+                
+                <!--<div id="student-fields" style="display: none;">
+                    <input type="text" id="up_id" placeholder="UP ID">
+                    <input type="text" id="course" placeholder="Course">
+                    <input type="text" id="year" placeholder="Year">
+                </div>
 
-            <input type="password" id="register-password" placeholder="Password" required>
-            <button onclick="registerUser()">Register</button>
-            <p>Already have an account? <a href="#" onclick="toggleForms()">Login</a></p>
+                <div id="teacher-fields" style="display: none;">
+                    <label>Select Courses:</label>
+                    <input type="checkbox" name="courses" value="Math"> Math
+                    <input type="checkbox" name="courses" value="Physics"> Physics
+                    <input type="checkbox" name="courses" value="Computer Science"> Computer Science
+                </div>-->
+
+                <input type="password" id="register-password" placeholder="Password" required>
+                <button onclick="register()">Register</button>
+                <p>Already have an account? <a href="#" onclick="toggleForms()">Login</a></p>
+            </div>
         </div>
 
         <div id="rasa-chat-widget" data-websocket-url="http://localhost:5005/socket.io"></div>
         <script src="https://unpkg.com/@rasahq/rasa-chat"></script>
+
         <script>
             function toggleForms() {
                 document.getElementById('login-form').style.display =
@@ -100,16 +101,68 @@
             
             function toggleRoleFields() {
                 const role = document.getElementById('role').value;
-                document.getElementById('student-fields').style.display = role === 'student' ? 'block' : 'none';
-                document.getElementById('teacher-fields').style.display = role === 'teacher' ? 'block' : 'none';
+                //document.getElementById('student-fields').style.display = role === 'student' ? 'block' : 'none';
+                //document.getElementById('teacher-fields').style.display = role === 'teacher' ? 'block' : 'none';
             }
-            
-            function authenticateUser() {
-                alert('Login functionality to be implemented!');
+        
+            function register() {
+                const role = document.getElementById("role").value;
+                const data = {
+                    email: document.getElementById("register-email").value,
+                    password: document.getElementById("register-password").value,
+                    role: role
+                };
+
+                /*if (role === "student") {
+                    data.up_id = document.getElementById("up_id").value;
+                    data.course = document.getElementById("course").value;
+                    data.year = document.getElementById("year").value;
+                } else {
+                    data.courses = document.getElementById("courses").value.split(",");
+                }*/
+
+                fetch("/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                }).then(response => response.json())
+                .then(data => {
+                    alert(data.message || data.error)
+                    // call showChat() if registration is successful
+                    if (data.message) showChat();
+                });
             }
-            
-            function registerUser() {
-                alert('Registration functionality to be implemented!');
+
+            function login() {
+                const data = {
+                    email: document.getElementById("login-email").value,
+                    password: document.getElementById("login-password").value
+                };
+
+                fetch("/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                }).then(response => response.json())
+                .then(data => {
+                    if (data.token) {
+                        localStorage.setItem("token", data.token);
+                        showChat();
+                    } else {
+                        alert("Invalid credentials");
+                    }
+                });
+            }
+
+            function showChat() {
+                document.getElementById("auth-container").style.display = "none";
+                document.getElementById("rasa-chat-widget-container").style.display = "block";
+            }
+
+            function logout() {
+                localStorage.removeItem("token");
+                document.getElementById("auth-container").style.display = "block";
+                document.getElementById("rasa-chat-widget-container").style.display = "none";
             }
         </script>
     </body>

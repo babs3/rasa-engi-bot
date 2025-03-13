@@ -47,6 +47,10 @@ services:
       - 8080:8080
     networks:
       - my-project
+    environment:
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "chatbotdb"
 
 networks:
   my-project:
