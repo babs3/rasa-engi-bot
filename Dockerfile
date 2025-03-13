@@ -25,5 +25,6 @@ ENV TRANSFORMERS_CACHE=/app/cache
 # Create cache directory with appropriate permissions
 RUN mkdir -p /app/cache && chown -R 1000:1000 /app/cache
 
-
 USER 1000
+
+CMD ["start", "--actions", "actions"]
