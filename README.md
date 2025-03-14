@@ -24,6 +24,10 @@ Enter the Flask container
 ```
 docker exec -it rasa-engi-bot-flask-server-1 bash
 ```
+Create migrations folder if needed
+```
+flask db init
+```
 After modifying models.py, generate a migration script
 ```
 flask db migrate -m "Describe your change here"

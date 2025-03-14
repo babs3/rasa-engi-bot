@@ -23,4 +23,4 @@ flask
 flask-bcrypt
 flask-sqlalchemy
 flask-cors
-psycopg2-binary  # Only for PostgreSQL
+psycopg2-binary

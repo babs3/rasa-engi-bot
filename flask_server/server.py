@@ -1,10 +1,11 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token
 import os
-from models import db, bcrypt, User
+from models import db, bcrypt, User, UserHistory
+from flask import Flask, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 app = Flask(__name__, static_folder="static", static_url_path="/")
 
@@ -21,6 +22,43 @@ jwt = JWTManager(app)
 @app.route("/")
 def serve_index():
     return send_from_directory("static", "index.html")
+
+@app.route('/get_user_id', methods=['POST'])
+@jwt_required()
+def get_user_id():
+    user_id = get_jwt_identity()
+    return jsonify({"user_id": user_id})
+
+@app.route("/save_interaction", methods=["POST"])
+@jwt_required()
+def save_interaction():
+    user_id = get_jwt_identity()
+    data = request.json
+    user_message = data.get("user_message")
+    bot_response = data.get("bot_response")
+    
+    if user_message and bot_response:
+        interaction = UserHistory(user_id=user_id, user_message=user_message, bot_response=bot_response)
+        db.session.add(interaction)
+        db.session.commit()
+        return jsonify({"message": "Interaction saved successfully!"}), 200
+    return jsonify({"error": "Invalid data"}), 400
+
+
+@app.route("/save_material", methods=["POST"])
+@jwt_required()
+def save_material():
+    user_id = get_jwt_identity()
+    data = request.json
+    material_name = data.get("material_name")
+    
+    if material_name:
+        material = MaterialsChecked(user_id=user_id, material_name=material_name)
+        db.session.add(material)
+        db.session.commit()
+        return jsonify({"message": "Material saved successfully!"}), 200
+    return jsonify({"error": "Invalid data"}), 400
+
 
 @app.route("/register", methods=["POST"])
 def register():

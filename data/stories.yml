@@ -28,3 +28,8 @@ stories:
   - action: utter_did_that_help
   - intent: deny
   - action: utter_goodbye
+
+- story: Set user ID
+  steps:
+  - intent: set_user_id
+  - action: action_set_user_id
