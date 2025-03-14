@@ -90,8 +90,13 @@ class ActionFetchClassMaterial(Action):
         max_vec_score = max(vector_scores) if vector_scores else 1
         vector_scores = [1 - (score / max_vec_score) for score in vector_scores]  # Convert L2 to similarity
 
-        max_bm25_score = max(bm25_scores_selected) if bm25_scores_selected else 1
-        bm25_scores_selected = [score / max_bm25_score for score in bm25_scores_selected]  # Normalize BM25 scores
+        # === NORMALIZE SCORES === #
+        max_bm25_score = max(bm25_scores_selected) if bm25_scores_selected else 1  # Avoid division by zero
+        if max_bm25_score > 0:
+            bm25_scores_selected = [score / max_bm25_score for score in bm25_scores_selected]  # Normalize BM25 scores
+        else:
+            print("⚠️ Warning: max_bm25_score is zero. Normalization will be skipped.")
+
 
         # === MERGE & RE-RANK RESULTS === #
         hybrid_results = []
