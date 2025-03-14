@@ -28,16 +28,14 @@ def register():
     if User.query.filter_by(email=data["email"]).first():
         return jsonify({"error": "User already exists"}), 400
 
-    hashed_password = bcrypt.generate_password_hash(data["password"]).decode("utf-8")
-
     new_user = User(
         role=data["role"],
         email=data["email"],
-        password=hashed_password,
-        #up_id=data.get("up_id"),
-        #course=data.get("course"),
-        #year=data.get("year"),
-        #courses=",".join(data.get("courses", [])) if data["role"] == "teacher" else None
+        password=data["password"], # password é hashed no model
+        up_id=data.get("up_id"),
+        course=data.get("course"),
+        year=data.get("year"),
+        courses=",".join(data.get("courses", [])) if data["role"] == "teacher" else None
     )
 
     db.session.add(new_user)
