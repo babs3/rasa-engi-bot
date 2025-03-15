@@ -17,7 +17,7 @@ services:
       - ./actions:/app/actions
       - ./db:/app/db  # Persist database
     ports:
-      - 5000:5000
+      - 5055:5055
     networks:
       - my-project
     environment:

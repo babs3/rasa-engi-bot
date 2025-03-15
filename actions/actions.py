@@ -31,14 +31,25 @@ VECTOR_DB_PATH = "vector_store"
 chroma_client = chromadb.PersistentClient(path=VECTOR_DB_PATH)
 collection = chroma_client.get_collection(name="class_materials")
 
-
-class ActionSetUserId(Action):
+class SetUserID(Action):
     def name(self):
         return "action_set_user_id"
 
-    def run(self, dispatcher, tracker, domain):
-        user_id = tracker.sender_id  # Get the user_id from the sender
-        return [SlotSet("user_id", user_id)]
+    async def run(self, dispatcher, tracker, domain):
+        #user_id = tracker.get_slot("user_id")
+        #print(f"\n🧒-- User ID: {user_id}")
+
+        #if not user_id:
+        user_id = tracker.latest_message.get("metadata", {}).get("user_id")
+        print(f"\n🧒-- User ID: {user_id}")
+        
+        if user_id:
+            dispatcher.utter_message(f"User ID {user_id} stored successfully!")
+            return [SlotSet("user_id", user_id)]
+
+        dispatcher.utter_message("No user ID found in metadata.")
+        return []
+
 
 # === ACTION 1: FETCH RAW MATERIAL === #
 class ActionFetchClassMaterial(Action):
@@ -178,7 +189,7 @@ class ActionFetchClassMaterial(Action):
                     # Log interaction to Flask backend
                     try:
                         response = requests.post(
-                            "http://localhost:5000/save_interaction",
+                            "http://localhost:8080/save_interaction",
                             json={
                                 "user_id": user_id,
                                 "user_message": query,

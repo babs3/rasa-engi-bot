@@ -17,3 +17,8 @@ rules:
     - intent: ask_clarification
     - action: action_fetch_class_material
     - action: action_get_class_material_location
+
+- rule: Set user ID
+  steps:
+  - intent: set_user_id
+  - action: action_set_user_id
