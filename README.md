@@ -59,6 +59,10 @@ View all records in the user table:
 ```
 SELECT * FROM "user";
 ```
+Drop all rows from the table:
+```
+DELETE FROM "user";
+```
 Exit PostgreSQL container:
 ```
 \q
