@@ -5,6 +5,8 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import hashlib
 import streamlit.components.v1 as components
+from streamlit_scroll_to_top import scroll_to_here
+from datetime import datetime
 
 # Database connection
 DB_CONFIG = {
@@ -46,6 +48,9 @@ def main():
 def auth_tabs():
     st.title("🔑 Authentication")
     tab1, tab2 = st.tabs(["Login", "Register"])
+
+    st.session_state["scroll_down"] = True
+    st.session_state["separator_displayed"] = False
 
     with tab1:
         login_form()
@@ -181,6 +186,7 @@ def user_exists(email):
     conn.close()
     return user is not None
 
+
 def chat_interface():
     st.title("💬 Chat with Rasa Bot")
     st.write(f"**User:** {st.session_state['user_email']}")
@@ -191,14 +197,30 @@ def chat_interface():
     for message in st.session_state["messages"]:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-    
+
+    # Display separator after the last past message
+    if not st.session_state.separator_displayed:
+        current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Enhanced separator styling
+        st.markdown(
+            f"""
+            <div style='border-top: 2px solid #4CAF50; margin-top: 20px; margin-bottom: 10px;'></div>
+            <div style='text-align: center; font-size: 14px; color: #4CAF50; margin-bottom: 20px;'>
+                📅 New Messages - {current_date}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        st.session_state.separator_displayed = True
+
+    # Handle scrolling to the bottom
+    if st.session_state.scroll_down:
+        scroll_to_here(0, key='bottom')  # Smooth scroll to the bottom of the page
+        st.session_state.scroll_down = False  # Reset the scroll state
+
     user_input = st.text_input("Type your message...", key="user_input")
-    st.session_state["scroll_down"] = True  # Trigger scroll down to latest message
-
     send_button = st.button("Send", use_container_width=True)
-
-    # Inject JavaScript to scroll to the "Send" button
-    scroll_down()
 
     if send_button and user_input:
         response = send_message(user_input, st.session_state["user_email"])
@@ -206,26 +228,8 @@ def chat_interface():
             st.session_state["messages"].append({"role": "user", "content": user_input})
             st.session_state["messages"].append({"role": "assistant", "content": response})
             save_chat_history(st.session_state["user_email"], user_input, response)
+        
         st.rerun()
-
-import random
-
-def scroll_down():
-    html_code = f"""
-    <div id="scroll-to-me" style='background: cyan; height=1px;'>hi</div>
-    <script id="{random.randint(1000, 9999)}">
-    var e = document.getElementById("scroll-to-me");
-    if (e) {{
-        e.scrollIntoView({{behavior: "smooth"}});
-        e.remove();
-    }}
-    </script>
-    """
-
-    components.html(html_code)
-
-
-
 
 def send_message(user_input, user_email):
     url = "http://rasa:5005/webhooks/rest/webhook"
@@ -244,7 +248,6 @@ def send_message(user_input, user_email):
         if messages:
             bot_replies = [msg["text"] for msg in messages if "text" in msg]
             bot_reply = "\n\n".join(bot_replies)
-            save_chat_history(user_email, user_input, bot_reply)
             return bot_reply
 
         return "🤖 Sorry, I didn't understand that."

@@ -1,3 +1,4 @@
 streamlit
 requests
 psycopg2-binary  # PostgreSQL connection
+streamlit-scroll-to-top 
