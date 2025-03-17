@@ -3,6 +3,7 @@ import requests
 import json
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from models import db, bcrypt, User, UserHistory
 
 # Database connection
 DB_CONFIG = {
@@ -62,9 +63,11 @@ def authenticate_user(email, password):
     cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute('SELECT * FROM "user" WHERE email = %s', (email,))
     user = cur.fetchone()
-    cur.close()
-    conn.close()
-    return user is not None
+    if user and bcrypt.check_password_hash(user["password"], password):
+        cur.close()
+        conn.close()
+        return True
+    return False
 
 def chat_interface():
     st.title("💬 Chat with Rasa Bot")
