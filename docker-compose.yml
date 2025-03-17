@@ -38,9 +38,22 @@ services:
     networks:
       - my-project
 
+  flask-server:
+    build:
+      context: ./flask-backend
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    networks:
+      - my-project
+    environment:
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "chatbotdb"
+
   streamlit-app:
     build:
-      context: ./streamlit
+      context: ./streamlit-frontend
       dockerfile: Dockerfile
     ports:
       - "8501:8501"

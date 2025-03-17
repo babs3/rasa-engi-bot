@@ -30,6 +30,5 @@ RUN mkdir -p /app/db
 USER 1000
 
 # Start Rasa Actions and Flask API
-#CMD ["sh", "-c", "rasa run actions & python /app/actions/auth_api.py && wait"]
 CMD ["start", "--actions", "actions"]
 
