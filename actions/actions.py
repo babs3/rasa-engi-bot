@@ -1,9 +1,3 @@
-# This files contains your custom actions which can be used to run
-# custom Python code.
-#
-# See this guide on how to implement these action:
-# https://rasa.com/docs/rasa-pro/concepts/custom-actions
-
 import sys
 sys.modules["sqlite3"] = __import__("pysqlite3")
 import chromadb
@@ -35,11 +29,8 @@ class ActionFetchClassMaterial(Action):
         return "action_fetch_class_material"
 
     def run(self, dispatcher, tracker, domain):
-        user_id = tracker.get_slot("user_id")
         query = tracker.latest_message.get("text")  # Get user query
-        print(f"\n🧒 User:")
-        print(f" - user_id: '{user_id}'")
-        print(f" - query: '{query}'")
+        print(f"\n🧒 User query: '{query}'")
         query = treat_raw_query(query)
 
         # === DENSE (Vector) SEARCH === #

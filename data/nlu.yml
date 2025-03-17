@@ -90,12 +90,6 @@ nlu:
     - am I talking to a bot?
     - am I talking to a human?
 
-- intent: set_user_id
-  examples: |
-    - My user ID is [up1001@gmail.com](user_id)
-    - Set user ID to [up2002@domain.com](user_id)
-    - My ID is [up3003](user_id)
-
 - intent: ask_clarification
   examples: |
     - What is

@@ -15,7 +15,7 @@ Stop and Remove Containers Gracefully
 ```
 docker-compose down
 ```
-Open ```http://localhost:8080/``` to test the bot.
+Open ```http://localhost:8501/``` to test the bot.
 
 **Note:** the `.env` file must be on root directory and must contain keys in the form `key_name=secret_value`
 

@@ -3,7 +3,6 @@ import requests
 import json
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from models import db, bcrypt, User, UserHistory
 import hashlib
 
 # Database connection

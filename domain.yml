@@ -9,7 +9,6 @@ intents:
   - mood_unhappy
   - bot_challenge
   - ask_clarification
-  - set_user_id
 
 slots:
   user_query:
@@ -21,13 +20,6 @@ slots:
     type: list
     mappings:
       - type: custom
-
-  user_id:
-    type: text
-    influence_conversation: false
-    mappings:
-      - type: custom
-
       
 responses:
 

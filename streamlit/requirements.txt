@@ -2,4 +2,3 @@ streamlit
 requests
 psycopg2-binary  # PostgreSQL connection
 flask_sqlalchemy
-flask_bcrypt
