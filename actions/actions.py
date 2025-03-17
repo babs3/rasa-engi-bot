@@ -24,7 +24,7 @@ from .utils import *
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Set up Google Gemini API Key
-genai.configure(api_key=os.getenv("GENAI_API_KEY"))
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 # Connect to ChromaDB
 VECTOR_DB_PATH = "vector_store"
@@ -189,7 +189,7 @@ class ActionFetchClassMaterial(Action):
                     # Log interaction to Flask backend
                     try:
                         response = requests.post(
-                            "http://localhost:8080/save_interaction",
+                            "http://flask-server:8080/save_interaction",
                             json={
                                 "user_id": user_id,
                                 "user_message": query,

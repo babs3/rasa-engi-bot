@@ -7,7 +7,7 @@ services:
       - 5005:5005
     networks:
       - my-project
-    command: run --enable-api --cors "*" --connector socketio
+    command: run --enable-api --cors "*" #--connector socketio
 
   action-server:
     build:
@@ -15,7 +15,6 @@ services:
       dockerfile: actions/Dockerfile
     volumes:
       - ./actions:/app/actions
-      - ./db:/app/db  # Persist database
     ports:
       - 5055:5055
     networks:
@@ -25,7 +24,7 @@ services:
       POSTGRES_USER: "admin"
       POSTGRES_PASSWORD: "password"
       POSTGRES_DB: "chatbotdb"
-      GENAI_API_KEY: "${GENAI_API_KEY}"  # Load API key from .env
+      GOOGLE_API_KEY: "${GOOGLE_API_KEY}"  # Load API key from .env
 
   db:
     image: postgres:13
@@ -51,6 +50,20 @@ services:
       POSTGRES_USER: "admin"
       POSTGRES_PASSWORD: "password"
       POSTGRES_DB: "chatbotdb"
+
+  streamlit-app:
+    build:
+      context: ./streamlit
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"
+    networks:
+      - my-project
+    environment:
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "chatbotdb"
+
 
 networks:
   my-project:

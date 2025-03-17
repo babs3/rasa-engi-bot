@@ -115,7 +115,7 @@
                 let e = document.createElement("script"),
                     t = document.head || document.getElementsByTagName("head")[0];
                 (e.src = "https://cdn.jsdelivr.net/npm/rasa-webchat/lib/index.js"),
-                (e.async = !0),
+                (e.async = true),
                 (e.onload = () => {
                     window.WebChat.default(
                         {
@@ -139,36 +139,33 @@
                         null
                     );
 
-                    fetch(`http://localhost:5005/webhooks/rest/webhook`, {
+                    // Send user ID to Rasa via Custom Channel
+                    fetch("http://localhost:5005/webhooks/first/webhook", {
                         mode: "no-cors",
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            name: "set_user_id",  // This should match an intent name in your Rasa NLU data
-                            entities: [{ entity: "user_id", value: userId }]
-                        })
+                        body:{
+                            "sender": "test_user",//userId,
+                            "text": "Hi there!",
+                            "metadata": {}//{ user_id: userId }  // Send metadata properly
+                        }
                     })
                     .then(response => {
-                        console.log("HTTP Status:", response.status); // Debug status
+                        console.log("HTTP Status:", response.status);  // Debugging response status
                         if (!response.ok) {
                             throw new Error(`HTTP error! Status: ${response.status}`);
                         }
-                        return response.text();  // Use `.text()` instead of `.json()` to check raw response
+                        return response.json();
                     })
-                    .then(text => {
-                        try {
-                            const data = text ? JSON.parse(text) : {};  // Handle empty response
-                            console.log("User ID slot set in Rasa:", data);
-                        } catch (error) {
-                            console.warn("Warning: Response is not valid JSON. Raw response:", text);
-                        }
+                    .then(data => {
+                        console.log("User ID slot set in Rasa:", data);
                     })
                     .catch(error => console.error("Error setting user ID slot:", error));
-
                 }),
                 t.insertBefore(e, t.firstChild);
             })();
         }
+
     </script>
 
 </body>

@@ -61,6 +61,7 @@ responses:
   
 
 actions:
+- action_extract_metadata
 - action_set_user_id
 - action_fetch_class_material
 - action_get_class_material_location
