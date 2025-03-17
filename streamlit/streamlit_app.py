@@ -4,6 +4,7 @@ import json
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from models import db, bcrypt, User, UserHistory
+import hashlib
 
 # Database connection
 DB_CONFIG = {
@@ -30,7 +31,7 @@ def main():
                 st.session_state.clear()
                 st.rerun()
         else:
-            st.info("Please log in to continue.")
+            st.info("Please log in or register.")
 
     # Authentication
     if "logged_in" not in st.session_state:
@@ -38,15 +39,24 @@ def main():
         st.session_state["user_email"] = ""
 
     if not st.session_state["logged_in"]:
-        login_form()
+        auth_tabs()
     else:
         chat_interface()
 
+def auth_tabs():
+    st.title("🔑 Authentication")
+    tab1, tab2 = st.tabs(["Login", "Register"])
+
+    with tab1:
+        login_form()
+
+    with tab2:
+        register_form()
+
 def login_form():
-    st.title("🔑 Login to Chatbot")
-    st.markdown("Enter your credentials to access the chatbot.")
-    email = st.text_input("📧 Email")
-    password = st.text_input("🔒 Password", type="password")
+    st.subheader("Login to Your Account")
+    email = st.text_input("📧 Email", key="login_email")
+    password = st.text_input("🔒 Password", type="password", key="login_password")
 
     if st.button("Login"):
         if authenticate_user(email, password):
@@ -55,25 +65,108 @@ def login_form():
             st.success("✅ Login successful!")
             st.rerun()
         else:
-            st.error("❌ Invalid credentials!")
+            st.error("❌ Invalid email or password!")
+
+def register_form():
+    st.subheader("Create a New Account")
+
+    # Basic user details
+    email = st.text_input("📧 Email", key="register_email")
+    password = st.text_input("🔑 Password", type="password", key="register_password")
+    confirm_password = st.text_input("🔑 Confirm Password", type="password", key="confirm_password")
+
+    # Role selection
+    role = st.radio("Select Role", ["Student", "Teacher"], key="register_role")
+
+    # Additional fields based on role
+    if role == "Student":
+        up_id = st.text_input("🎓 University ID", key="register_up_id")
+        course = st.text_input("📚 Course", key="register_course")
+        year = st.number_input("📅 Year", min_value=1, max_value=5, step=1, key="register_year")
+
+    elif role == "Teacher":
+        available_courses = ["Math", "Science", "History", "Computer Science", "English"]  # Example courses
+        courses = st.multiselect("📖 Select Courses", available_courses, key="register_courses")
+
+    if st.button("Register"):
+        if password != confirm_password:
+            st.error("❌ Passwords do not match!")
+        elif user_exists(email):
+            st.error("❌ Email already registered! Try logging in.")
+        else:
+            # Prepare user data
+            hashed_password = hash_password(password)
+            user_data = {
+                "email": email,
+                "password": hashed_password,
+                "role": role,
+                "up_id": up_id if role == "Student" else None,
+                "course": course if role == "Student" else None,
+                "year": year if role == "Student" else None,
+                "courses": courses if role == "Teacher" else None,
+            }
+
+            if register_user(user_data):
+                st.session_state["logged_in"] = True
+                st.session_state["user_email"] = email
+                st.success("✅ Registration successful! You can now log in.")
+                st.rerun()
+
+def register_user(user_data):
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    teacher_courses = ",".join(user_data["courses"]) if user_data["courses"] else None
+
+    # Insert user into database
+    cur.execute(
+        'INSERT INTO "user" (email, password, role, up_id, course, year, courses) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id',
+        (user_data["email"], user_data["password"], user_data["role"], user_data["up_id"], user_data["course"], user_data["year"], teacher_courses)
+    )
+    #user_id = cur.fetchone()[0]
+
+    # Insert teacher courses if applicable
+    #if user_data["role"] == "Teacher" and user_data["courses"]:
+    #    for course in user_data["courses"]:
+    #        cur.execute('INSERT INTO teacher_courses (user_id, course) VALUES (%s, %s)', (user_id, course))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return True
+
+# Hash passwords before storing them
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
 
 # User authentication
 def authenticate_user(email, password):
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute('SELECT * FROM "user" WHERE email = %s', (email,))
+    hashed_password = hash_password(password)
+    cur.execute('SELECT * FROM "user" WHERE email = %s AND password = %s', (email, hashed_password))
     user = cur.fetchone()
-    if user and bcrypt.check_password_hash(user["password"], password):
+    if user:
         cur.close()
         conn.close()
         return True
     return False
 
+# Check if user already exists
+def user_exists(email):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute('SELECT * FROM "user" WHERE email = %s', (email,))
+    user = cur.fetchone()
+    cur.close()
+    conn.close()
+    return user is not None
+
 def chat_interface():
     st.title("💬 Chat with Rasa Bot")
     st.write(f"**User:** {st.session_state['user_email']}")
 
-    # Store chat history in session state
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
 
@@ -82,13 +175,11 @@ def chat_interface():
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # Chat input box
     user_input = st.text_input("Type your message...", key="user_input")
-    
+
     if st.button("Send", use_container_width=True) and user_input:
         response = send_message(user_input, st.session_state["user_email"])
         if response:
-            # Store user and bot messages
             st.session_state["messages"].append({"role": "user", "content": user_input})
             st.session_state["messages"].append({"role": "assistant", "content": response})
             st.rerun()
@@ -122,7 +213,6 @@ def save_chat_history(user_email, user_message, bot_response):
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
-    # Fetch user_id from user table
     cur.execute('SELECT id FROM "user" WHERE email = %s', (user_email,))
     user = cur.fetchone()
 

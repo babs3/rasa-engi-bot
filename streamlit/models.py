@@ -22,7 +22,7 @@ class User(db.Model):
     def __init__(self, role, email, password, up_id=None, course=None, year=None, courses=None):
         self.role = role
         self.email = email
-        self.password = bcrypt.generate_password_hash(password).decode("utf-8")
+        self.password = password # password is hashed in the streamlit app
         self.up_id = up_id
         self.course = course
         self.year = year

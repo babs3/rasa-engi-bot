@@ -15,8 +15,6 @@ import os
 from rasa_sdk.events import SlotSet, FollowupAction
 from typing import Any, Text, Dict, List
 from rasa_sdk.executor import CollectingDispatcher
-import psycopg2
-import requests
 
 from .utils import *
 
@@ -30,26 +28,6 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 VECTOR_DB_PATH = "vector_store"
 chroma_client = chromadb.PersistentClient(path=VECTOR_DB_PATH)
 collection = chroma_client.get_collection(name="class_materials")
-
-class SetUserID(Action):
-    def name(self):
-        return "action_set_user_id"
-
-    async def run(self, dispatcher, tracker, domain):
-        #user_id = tracker.get_slot("user_id")
-        #print(f"\n🧒-- User ID: {user_id}")
-
-        #if not user_id:
-        user_id = tracker.latest_message.get("metadata", {}).get("user_id")
-        print(f"\n🧒-- User ID: {user_id}")
-        
-        if user_id:
-            dispatcher.utter_message(f"User ID {user_id} stored successfully!")
-            return [SlotSet("user_id", user_id)]
-
-        dispatcher.utter_message("No user ID found in metadata.")
-        return []
-
 
 # === ACTION 1: FETCH RAW MATERIAL === #
 class ActionFetchClassMaterial(Action):
@@ -185,24 +163,6 @@ class ActionFetchClassMaterial(Action):
                     print("\n🎯 Gemini Response Generated Successfully!")
                     formatted_response = format_gemini_response(response.text)
                     print(formatted_response)
-
-                    # Log interaction to Flask backend
-                    try:
-                        response = requests.post(
-                            "http://flask-server:8080/save_interaction",
-                            json={
-                                "user_id": user_id,
-                                "user_message": query,
-                                "bot_response": formatted_response
-                            }
-                        )
-                        if response.status_code == 200:
-                            print("\n✅ Interaction saved successfully.")
-                        else:
-                            print("\n❌ Failed to save interaction.")
-                    except Exception as e:
-                        print(f"\n❌ Error logging interaction: {e}")
-
                     dispatcher.utter_message(text=formatted_response)
                 else:
                     print("\n⚠️ Gemini Response is empty.")

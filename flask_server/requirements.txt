@@ -1,8 +1,0 @@
-flask
-flask_sqlalchemy
-flask_bcrypt
-flask_jwt_extended
-psycopg2-binary
-flask-migrate
-flask_cors
-requests
