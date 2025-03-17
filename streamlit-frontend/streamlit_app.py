@@ -4,6 +4,7 @@ import json
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import hashlib
+import streamlit.components.v1 as components
 
 # Database connection
 DB_CONFIG = {
@@ -61,10 +62,28 @@ def login_form():
         if authenticate_user(email, password):
             st.session_state["logged_in"] = True
             st.session_state["user_email"] = email
-            st.success("✅ Login successful!")
+            st.session_state["messages"] = load_chat_history(email)  # Load previous messages
+            st.success("✅ Login successful! Your previous chat history has been loaded.")
             st.rerun()
         else:
             st.error("❌ Invalid email or password!")
+
+def load_chat_history(user_email):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    cur.execute('SELECT user_message, bot_response FROM user_history WHERE user_id = (SELECT id FROM "user" WHERE email = %s) ORDER BY timestamp ASC', (user_email,))
+    history = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    messages = []
+    for entry in history:
+        messages.append({"role": "user", "content": entry["user_message"]})
+        messages.append({"role": "assistant", "content": entry["bot_response"]})
+
+    return messages  # Return structured messages
 
 def register_form():
     st.subheader("Create a New Account")
@@ -169,19 +188,44 @@ def chat_interface():
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
 
-    # Display previous messages
     for message in st.session_state["messages"]:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-
+    
     user_input = st.text_input("Type your message...", key="user_input")
+    st.session_state["scroll_down"] = True  # Trigger scroll down to latest message
 
-    if st.button("Send", use_container_width=True) and user_input:
+    send_button = st.button("Send", use_container_width=True)
+
+    # Inject JavaScript to scroll to the "Send" button
+    scroll_down()
+
+    if send_button and user_input:
         response = send_message(user_input, st.session_state["user_email"])
         if response:
             st.session_state["messages"].append({"role": "user", "content": user_input})
             st.session_state["messages"].append({"role": "assistant", "content": response})
-            st.rerun()
+            save_chat_history(st.session_state["user_email"], user_input, response)
+        st.rerun()
+
+import random
+
+def scroll_down():
+    html_code = f"""
+    <div id="scroll-to-me" style='background: cyan; height=1px;'>hi</div>
+    <script id="{random.randint(1000, 9999)}">
+    var e = document.getElementById("scroll-to-me");
+    if (e) {{
+        e.scrollIntoView({{behavior: "smooth"}});
+        e.remove();
+    }}
+    </script>
+    """
+
+    components.html(html_code)
+
+
+
 
 def send_message(user_input, user_email):
     url = "http://rasa:5005/webhooks/rest/webhook"
