@@ -274,16 +274,16 @@ def chat_interface():
         st.session_state.scroll_down = False  # Reset the scroll state
 
     st.text_input("Type your message:", key="user_input", on_change=send_message_on_enter)
-    send_button = st.button("Send", use_container_width=True)
+    #send_button = st.button("Send", use_container_width=True)
 
-    #if send_button and user_input:
+    #if send_button and st.session_state.user_input:
     #    cookies["separator_displayed"] = "True"
-    #    response = send_message(user_input, cookies.get("user_email"))
+    #    response = send_message(st.session_state.user_input, cookies.get("user_email"))
     #    if response:
-    #        st.session_state["messages"].append({"role": "user", "content": user_input})
+    #        st.session_state["messages"].append({"role": "user", "content": st.session_state.user_input})
     #        st.session_state["messages"].append({"role": "assistant", "content": response})
-    #        save_chat_history(cookies.get("user_email"), user_input, response)
-    #    
+    #        save_chat_history(cookies.get("user_email"), st.session_state.user_input, response)
+    #        st.session_state.user_input = ""  # Clear the input field    
     #    st.rerun()
 
 def send_message_on_enter():
