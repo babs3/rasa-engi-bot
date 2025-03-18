@@ -7,6 +7,7 @@ import hashlib
 import streamlit.components.v1 as components
 from streamlit_scroll_to_top import scroll_to_here
 from datetime import datetime
+import re
 
 # Database connection
 DB_CONFIG = {
@@ -45,6 +46,14 @@ def main():
     else:
         chat_interface()
 
+def is_valid_email(email):
+    pattern = r'^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
+
+def is_strong_password(password):
+    pattern = r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$'
+    return re.match(pattern, password) is not None
+
 def auth_tabs():
     st.title("🔑 Authentication")
     tab1, tab2 = st.tabs(["Login", "Register"])
@@ -64,6 +73,9 @@ def login_form():
     password = st.text_input("🔒 Password", type="password", key="login_password")
 
     if st.button("Login"):
+        if not is_valid_email(email):
+            st.error("❌ Invalid email format!")
+            return
         if authenticate_user(email, password):
             st.session_state["logged_in"] = True
             st.session_state["user_email"] = email
@@ -112,10 +124,18 @@ def register_form():
         courses = st.multiselect("📖 Select Courses", available_courses, key="register_courses")
 
     if st.button("Register"):
+        if not is_valid_email(email):
+            st.error("❌ Invalid email format!")
+            return
+        elif not is_strong_password(password):
+            st.error("❌ Password must be at least 8 characters long, contain uppercase and lowercase letters, digits, and special characters.")
+            return
         if password != confirm_password:
             st.error("❌ Passwords do not match!")
+            return
         elif user_exists(email):
             st.error("❌ Email already registered! Try logging in.")
+            return
         else:
             # Prepare user data
             hashed_password = hash_password(password)
