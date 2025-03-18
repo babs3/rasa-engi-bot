@@ -1,13 +1,30 @@
 import streamlit as st
+
+st.set_page_config("Engi-bot", '🤖', layout="wide")
+
 import requests
 import json
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import hashlib
-import streamlit.components.v1 as components
 from streamlit_scroll_to_top import scroll_to_here
 from datetime import datetime
 import re
+from streamlit_cookies_manager import EncryptedCookieManager
+from time import sleep
+import warnings
+
+# Suppress Streamlit deprecation warnings
+warnings.filterwarnings("ignore")
+
+# Generate a strong secret key for your application
+SECRET_KEY = "your_strong_secret_key_here"
+
+# Cookie manager with password
+cookies = EncryptedCookieManager(prefix="chatbot_app_", password=SECRET_KEY)
+
+if not cookies.ready():
+    st.stop()
 
 # Database connection
 DB_CONFIG = {
@@ -23,25 +40,37 @@ def get_db_connection():
 
 # Streamlit UI
 def main():
-    st.set_page_config(page_title="Chatbot", layout="wide")
 
     # Sidebar for logout
     with st.sidebar:
-        st.title("Chatbot")
-        if "logged_in" in st.session_state and st.session_state["logged_in"]:
-            st.write(f"Logged in as **{st.session_state['user_email']}**")
+        st.title("Engi-bot")
+        #if "logged_in" in st.session_state and st.session_state["logged_in"]:
+        if cookies.get("logged_in") == "True":
+            user_email = cookies.get("user_email")
+            st.write(f"Logged in as **{user_email}**")
             if st.button("Logout"):
                 st.session_state.clear()
+                cookies["logged_in"] = "False"
+                cookies["user_email"] = ""
+                cookies["separator_displayed"] = "False"
+                cookies.save()
+                sleep(1)  # Add a delay to give time to save cookies
                 st.rerun()
         else:
             st.info("Please log in or register.")
 
     # Authentication
-    if "logged_in" not in st.session_state:
-        st.session_state["logged_in"] = False
-        st.session_state["user_email"] = ""
+    #if "logged_in" not in st.session_state:
+    #    st.session_state["logged_in"] = False
+    #    st.session_state["user_email"] = ""
 
-    if not st.session_state["logged_in"]:
+    st.session_state["scroll_down"] = True
+    if "separator_displayed" not in cookies:
+        cookies["separator_displayed"] = "False"
+
+    #if not st.session_state["logged_in"]:
+    #    auth_tabs()
+    if cookies.get("logged_in") != "True":
         auth_tabs()
     else:
         chat_interface()
@@ -57,9 +86,6 @@ def is_strong_password(password):
 def auth_tabs():
     st.title("🔑 Authentication")
     tab1, tab2 = st.tabs(["Login", "Register"])
-
-    st.session_state["scroll_down"] = True
-    st.session_state["separator_displayed"] = False
 
     with tab1:
         login_form()
@@ -77,9 +103,12 @@ def login_form():
             st.error("❌ Invalid email format!")
             return
         if authenticate_user(email, password):
-            st.session_state["logged_in"] = True
-            st.session_state["user_email"] = email
-            st.session_state["messages"] = load_chat_history(email)  # Load previous messages
+            #st.session_state["logged_in"] = True
+            #st.session_state["user_email"] = email
+            #st.session_state["messages"] = load_chat_history(email)  # Load previous messages
+            cookies["logged_in"] = "True"
+            cookies["user_email"] = email
+            cookies.save()
             st.success("✅ Login successful! Your previous chat history has been loaded.")
             st.rerun()
         else:
@@ -129,7 +158,7 @@ def register_form():
             return
         elif not is_strong_password(password):
             st.error("❌ Password must be at least 8 characters long, contain uppercase and lowercase letters, digits, and special characters.")
-            return
+            #return
         if password != confirm_password:
             st.error("❌ Passwords do not match!")
             return
@@ -150,8 +179,11 @@ def register_form():
             }
 
             if register_user(user_data):
-                st.session_state["logged_in"] = True
-                st.session_state["user_email"] = email
+                #st.session_state["logged_in"] = True
+                #st.session_state["user_email"] = email
+                cookies["logged_in"] = "True"
+                cookies["user_email"] = email
+                cookies.save()
                 st.success("✅ Registration successful! You can now log in.")
                 st.rerun()
 
@@ -209,17 +241,18 @@ def user_exists(email):
 
 def chat_interface():
     st.title("💬 Chat with Rasa Bot")
-    st.write(f"**User:** {st.session_state['user_email']}")
+    st.write(f"**User:** {cookies.get('user_email')}")
 
     if "messages" not in st.session_state:
-        st.session_state["messages"] = []
+        st.session_state["messages"] = load_chat_history(cookies.get("user_email"))  # Load previous messages
+
 
     for message in st.session_state["messages"]:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
     # Display separator after the last past message
-    if not st.session_state.separator_displayed:
+    if cookies["separator_displayed"] == "False":
         current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
         # Enhanced separator styling
@@ -232,7 +265,6 @@ def chat_interface():
             """,
             unsafe_allow_html=True
         )
-        st.session_state.separator_displayed = True
 
     # Handle scrolling to the bottom
     if st.session_state.scroll_down:
@@ -243,11 +275,12 @@ def chat_interface():
     send_button = st.button("Send", use_container_width=True)
 
     if send_button and user_input:
-        response = send_message(user_input, st.session_state["user_email"])
+        cookies["separator_displayed"] = "True"
+        response = send_message(user_input, cookies.get("user_email"))
         if response:
             st.session_state["messages"].append({"role": "user", "content": user_input})
             st.session_state["messages"].append({"role": "assistant", "content": response})
-            save_chat_history(st.session_state["user_email"], user_input, response)
+            save_chat_history(cookies.get("user_email"), user_input, response)
         
         st.rerun()
 
