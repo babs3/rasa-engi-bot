@@ -52,26 +52,26 @@ def main():
                 st.session_state.clear()
                 cookies["logged_in"] = "False"
                 cookies["user_email"] = ""
-                cookies["separator_displayed"] = "False"
+                cookies["display_message_separator"] = "True"
                 cookies.save()
                 sleep(1)  # Add a delay to give time to save cookies
                 st.rerun()
         else:
             st.info("Please log in or register.")
 
-    # Authentication
-    #if "logged_in" not in st.session_state:
-    #    st.session_state["logged_in"] = False
-    #    st.session_state["user_email"] = ""
-
-    st.session_state["scroll_down"] = True
-    if "separator_displayed" not in cookies:
-        cookies["separator_displayed"] = "False"
+    if "scroll_down" not in st.session_state:
+        st.session_state["scroll_down"] = True
+    
+    if "display_message_separator" not in cookies:
+        cookies["display_message_separator"] = "True"
 
     if "user_input" not in st.session_state:
         st.session_state.user_input = ""
-    #if not st.session_state["logged_in"]:
-    #    auth_tabs()
+    
+    if "input_disabled" not in st.session_state:
+        st.session_state.input_disabled = "False"
+
+        
     if cookies.get("logged_in") != "True":
         auth_tabs()
     else:
@@ -105,9 +105,6 @@ def login_form():
             st.error("❌ Invalid email format!")
             return
         if authenticate_user(email, password):
-            #st.session_state["logged_in"] = True
-            #st.session_state["user_email"] = email
-            #st.session_state["messages"] = load_chat_history(email)  # Load previous messages
             cookies["logged_in"] = "True"
             cookies["user_email"] = email
             cookies.save()
@@ -240,7 +237,6 @@ def user_exists(email):
     conn.close()
     return user is not None
 
-
 def chat_interface():
     st.title("💬 Chat with Rasa Bot")
     st.write(f"**User:** {cookies.get('user_email')}")
@@ -248,13 +244,12 @@ def chat_interface():
     if "messages" not in st.session_state:
         st.session_state["messages"] = load_chat_history(cookies.get("user_email"))  # Load previous messages
 
-
     for message in st.session_state["messages"]:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
     # Display separator after the last past message
-    if cookies["separator_displayed"] == "False":
+    if cookies["display_message_separator"] == "True":
         current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
         # Enhanced separator styling
@@ -273,29 +268,29 @@ def chat_interface():
         scroll_to_here(0, key='bottom')  # Smooth scroll to the bottom of the page
         st.session_state.scroll_down = False  # Reset the scroll state
 
-    st.text_input("Type your message:", key="user_input", on_change=send_message_on_enter)
-    #send_button = st.button("Send", use_container_width=True)
+    st.text_input("Type your message:", key="user_input", on_change=trigger_bot_thinking)
 
-    #if send_button and st.session_state.user_input:
-    #    cookies["separator_displayed"] = "True"
-    #    response = send_message(st.session_state.user_input, cookies.get("user_email"))
-    #    if response:
-    #        st.session_state["messages"].append({"role": "user", "content": st.session_state.user_input})
-    #        st.session_state["messages"].append({"role": "assistant", "content": response})
-    #        save_chat_history(cookies.get("user_email"), st.session_state.user_input, response)
-    #        st.session_state.user_input = ""  # Clear the input field    
-    #    st.rerun()
 
-def send_message_on_enter():
-    cookies["separator_displayed"] = "True"
+def trigger_bot_thinking():
+    cookies["display_message_separator"] = "False"
+
+    st.session_state["messages"].append({"role": "user", "content": st.session_state.user_input})
+
+    #st.session_state.scroll_down = True  # Scroll to the bottom
+
+    # Step 2: Process the response after UI refresh
     response = send_message(st.session_state.user_input, cookies.get("user_email"))
+
     if response:
-        st.session_state["messages"].append({"role": "user", "content": st.session_state.user_input})
+        st.session_state["messages"].pop()  # Remove "thinking" message
         st.session_state["messages"].append({"role": "assistant", "content": response})
         save_chat_history(cookies.get("user_email"), st.session_state.user_input, response)
-    st.session_state.user_input = ""  # Clear the input field
-    
+
+    # Step 3: Enable input field again 
+    st.session_state.user_input = ""  # Clear input field
     st.rerun()
+
+    
 
 def send_message(user_input, user_email):
     url = "http://rasa:5005/webhooks/rest/webhook"
