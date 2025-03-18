@@ -68,6 +68,8 @@ def main():
     if "separator_displayed" not in cookies:
         cookies["separator_displayed"] = "False"
 
+    if "user_input" not in st.session_state:
+        st.session_state.user_input = ""
     #if not st.session_state["logged_in"]:
     #    auth_tabs()
     if cookies.get("logged_in") != "True":
@@ -271,18 +273,29 @@ def chat_interface():
         scroll_to_here(0, key='bottom')  # Smooth scroll to the bottom of the page
         st.session_state.scroll_down = False  # Reset the scroll state
 
-    user_input = st.text_input("Type your message...", key="user_input")
+    st.text_input("Type your message:", key="user_input", on_change=send_message_on_enter)
     send_button = st.button("Send", use_container_width=True)
 
-    if send_button and user_input:
-        cookies["separator_displayed"] = "True"
-        response = send_message(user_input, cookies.get("user_email"))
-        if response:
-            st.session_state["messages"].append({"role": "user", "content": user_input})
-            st.session_state["messages"].append({"role": "assistant", "content": response})
-            save_chat_history(cookies.get("user_email"), user_input, response)
-        
-        st.rerun()
+    #if send_button and user_input:
+    #    cookies["separator_displayed"] = "True"
+    #    response = send_message(user_input, cookies.get("user_email"))
+    #    if response:
+    #        st.session_state["messages"].append({"role": "user", "content": user_input})
+    #        st.session_state["messages"].append({"role": "assistant", "content": response})
+    #        save_chat_history(cookies.get("user_email"), user_input, response)
+    #    
+    #    st.rerun()
+
+def send_message_on_enter():
+    cookies["separator_displayed"] = "True"
+    response = send_message(st.session_state.user_input, cookies.get("user_email"))
+    if response:
+        st.session_state["messages"].append({"role": "user", "content": st.session_state.user_input})
+        st.session_state["messages"].append({"role": "assistant", "content": response})
+        save_chat_history(cookies.get("user_email"), st.session_state.user_input, response)
+    st.session_state.user_input = ""  # Clear the input field
+    
+    st.rerun()
 
 def send_message(user_input, user_email):
     url = "http://rasa:5005/webhooks/rest/webhook"
