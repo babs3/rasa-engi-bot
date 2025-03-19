@@ -29,6 +29,14 @@ class ActionFetchClassMaterial(Action):
         return "action_fetch_class_material"
 
     def run(self, dispatcher, tracker, domain):
+
+        user_message = tracker.latest_message.get("text")
+        sender_id = tracker.sender_id  # ✅ Retrieves the "sender" field
+        metadata_email = tracker.latest_message.get("metadata", {}).get("user_email")
+
+        print(f"📩 Sender ID: {sender_id}")  # This should match user_email in your API request
+        print(f"📨 User ({metadata_email}) said: {user_message}")
+        
         query = tracker.latest_message.get("text")  # Get user query
         print(f"\n🧒 User query: '{query}'")
         query = treat_raw_query(query)
@@ -155,6 +163,8 @@ class ActionFetchClassMaterial(Action):
                     formatted_response = format_gemini_response(response.text)
                     print(formatted_response)
                     dispatcher.utter_message(text=formatted_response)
+
+                    save_student_progress(sender_id, user_message, formatted_response)
                 else:
                     print("\n⚠️ Gemini Response is empty.")
                     dispatcher.utter_message(text="Sorry, I couldn't generate a response.")

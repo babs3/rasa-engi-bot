@@ -3,6 +3,8 @@ from fuzzywuzzy import fuzz
 import pickle
 from difflib import get_close_matches
 import re
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -10,6 +12,35 @@ nlp = spacy.load("en_core_web_sm")
 with open("vector_store/bm25_index.pkl", "rb") as f:
     bm25_index, bm25_metadata, bm25_documents = pickle.load(f)
 
+# Database connection
+DB_CONFIG = {
+    "dbname": "chatbotdb",
+    "user": "admin",
+    "password": "password",
+    "host": "db",  # Docker service name
+    "port": 5432
+}
+
+def get_db_connection():
+    return psycopg2.connect(**DB_CONFIG)
+
+def save_student_progress(user_email, user_message, bot_response):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    cur.execute('SELECT id FROM "user" WHERE email = %s', (user_email,))
+    user = cur.fetchone()
+
+    if user:
+        user_id = user['id']
+        cur.execute(
+            "INSERT INTO user_history (user_id, user_message, bot_response, timestamp) VALUES (%s, %s, %s, NOW())",
+            (user_id, user_message, bot_response)
+        )
+        conn.commit()
+    
+    cur.close()
+    conn.close()
 
 # === STEP 1: MULTI-WORD EXPRESSION (MWE) EXTRACTION === #
 

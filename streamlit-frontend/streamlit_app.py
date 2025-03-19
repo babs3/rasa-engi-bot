@@ -56,6 +56,9 @@ def main():
                 cookies.save()
                 sleep(1)  # Add a delay to give time to save cookies
                 st.rerun()
+            # UI Layout
+            st.title("📊 Student Progress Dashboard")
+            st.subheader("📈 Overview")
         else:
             st.info("Please log in or register.")
 
@@ -238,7 +241,7 @@ def user_exists(email):
     return user is not None
 
 def chat_interface():
-    st.title("💬 Chat with Rasa Bot")
+    st.title("💬 Chat with EngiBot")
     st.write(f"**User:** {cookies.get('user_email')}")
 
     if "messages" not in st.session_state:
