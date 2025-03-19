@@ -159,9 +159,9 @@ class ActionFetchClassMaterial(Action):
             print("\n📢 Sending to Gemini API for Summarization...")
             print(f"🔹 Prompt: {prompt[:200]}\n")  # Show only first 200 chars for readability
             
-            formatted_response = "Sorry, I couldn't generate a response."
+            formatted_response = "Sorry, I couldn't generate a response..."
             try:
-                g_model = genai.GenerativeModel("gemini-1.5-base-latest")
+                g_model = genai.GenerativeModel("gemini-1.5-pro-latest")
                 response = g_model.generate_content(prompt)
 
                 if hasattr(response, "text") and response.text:
@@ -175,9 +175,6 @@ class ActionFetchClassMaterial(Action):
             except Exception as e:
                 dispatcher.utter_message(text="Sorry, I couldn't process that request.")
                 print(f"\n❌ Error calling Gemini API: {e}")
-
-            # Call the new action for material location
-            #ActionGetClassMaterialLocation().run(dispatcher, tracker, domain)
 
         return  [
             SlotSet("user_query", query),  # Store the query
@@ -294,4 +291,5 @@ class ActionGetClassMaterialLocation(Action):
             print("\n⚠️  No exact references found, but you might check related PDFs.")
             dispatcher.utter_message(text="I couldn't find specific page references, but check related PDFs.")
 
-        return []
+        #clear the slots
+        return [SlotSet("materials_location", []), SlotSet("bot_response", []), SlotSet("sender_id", ""), SlotSet("pdfs", []), SlotSet("user_query", "")]

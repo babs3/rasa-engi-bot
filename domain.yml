@@ -22,7 +22,7 @@ slots:
       - type: custom
 
   bot_response:
-    type: list
+    type: text
     mappings:
       - type: custom
   
