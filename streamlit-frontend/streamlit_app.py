@@ -318,9 +318,12 @@ def set_student_insights(user_email):
 
         # Topic Frequency Analysis
         st.subheader("📚 Most Discussed Topics")
-        topic_counts = df_filtered["relevant_tokens"].value_counts().reset_index()
+        # Split the relevant_tokens strings and flatten the list
+        all_topics = [topic for topics_str in df_filtered["relevant_tokens"] for topic in topics_str.split(";")]
+        topic_counts = pd.Series(all_topics).value_counts().reset_index()
         topic_counts.columns = ["Topic", "Frequency"]
         st.bar_chart(topic_counts.set_index("Topic"))
+
 
         # Reference Materials Usage
         st.subheader("📄 Reference Material Usage")

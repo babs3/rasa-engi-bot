@@ -30,7 +30,9 @@ def save_student_progress(user_email, user_message, bot_response, tokens, pfds):
 
     cur.execute('SELECT id FROM "users" WHERE email = %s', (user_email,))
     user = cur.fetchone()
-    print(f"🔍 User found: {user}")
+
+    # concatenate the tokens in a string format
+    tokens = '; '.join(tokens)
 
     if user:
         user_id = user['id']
@@ -66,7 +68,6 @@ def extract_complex_tokens(query): # ['pestel analysis']
 
     # Remove duplicates while preserving order
     keywords = list(dict.fromkeys(keywords))
-    print(f"    📚 Complex tokenss: {keywords}")
     return keywords
 
 
