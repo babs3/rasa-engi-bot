@@ -30,6 +30,12 @@ slots:
     type: text
     mappings:
       - type: custom
+  
+  pdfs:
+    type: list
+    mappings:
+      - type: custom
+  
       
 responses:
 

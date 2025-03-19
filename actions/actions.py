@@ -130,12 +130,17 @@ class ActionFetchClassMaterial(Action):
         else: 
             print("\n✅ Selected Pages After Filtering:")
             document_entries = []
+            pdf_insights = []
             idx = 1
             for doc, meta, score in selected_results:
+                pdf_insights.append(meta['file'])
                 document_entries.append((meta['file'], meta['page']))
                 print(f"{idx}. 📄 PDF: {meta['file']} | Page: {meta['page']} | Score: {score:.4f}")
                 idx += 1
             
+            # stay only with unique pdfs
+            pdf_insights = list(set(pdf_insights))
+
             # **Sort by PDF name (A-Z) and then by page number (ascending)**
             document_entries.sort(key=lambda x: (x[0].lower(), x[1]))
             gemini_results = group_pages_by_pdf(document_entries)
@@ -178,7 +183,8 @@ class ActionFetchClassMaterial(Action):
             SlotSet("user_query", query),  # Store the query
             SlotSet("materials_location", gemini_results),  # Store selected materials
             SlotSet("bot_response", formatted_response),  # Store the bot response
-            SlotSet("sender_id", sender_id)  # Store the sender ID
+            SlotSet("sender_id", sender_id),  # Store the sender ID
+            SlotSet("pdfs", pdf_insights)  # Store the pdf insights
             ]
 
 
@@ -192,6 +198,7 @@ class ActionGetClassMaterialLocation(Action):
         selected_materials = tracker.get_slot("materials_location")
         bot_response = tracker.get_slot("bot_response")
         sender_id = tracker.get_slot("sender_id")
+        pdfs = tracker.get_slot("pdfs")
         query = tracker.get_slot("user_query") # already treated in last function
 
         print(f"\n\n 🔖 --------- Getting class materials location --------- 🔖 ")
@@ -225,6 +232,7 @@ class ActionGetClassMaterialLocation(Action):
 
         location_results = []
         document_entries = []  # Store documents before sorting
+        pdfs_insights = []
 
         for i in top_indices:
             file_name = bm25_metadata[i]["file"]
@@ -236,6 +244,7 @@ class ActionGetClassMaterialLocation(Action):
 
             # Perform fuzzy matching -> solves matches like 'external environment analysis\npestel analysis'
             if fuzzy_match(expanded_complex, document_tokens):
+                pdfs_insights.append(file_name)
                 document_entries.append((file_name, page_number))
 
         if len(document_entries) == 0:
@@ -254,7 +263,10 @@ class ActionGetClassMaterialLocation(Action):
                 contains_generic = any(fuzzy_match([word], simple_document_tokens) for word in generic_terms)
 
                 if contains_specific or (contains_generic and len(specific_terms) == 0):
+                    pdfs_insights.append(file_name)
                     document_entries.append((file_name, page_number))
+                
+        pdfs_insights = list(set(pdfs_insights))
 
 
         # **Sort by PDF name (A-Z) and then by page number (ascending)**
@@ -267,6 +279,9 @@ class ActionGetClassMaterialLocation(Action):
 
             if len(document_entries) > len(selected_materials) * 3: # means that the tokenization went wrong
                 location_results = selected_materials
+                save_student_progress(sender_id, query, bot_response, simple_tokens, ", ".join(pdfs_insights))
+            else:
+                save_student_progress(sender_id, query, bot_response, simple_tokens, ", ".join(pdfs))
 
             print("\n🎯 Material location for query found!")
             print("\n📌 FINAL SORTED RESULTS:")
@@ -274,7 +289,6 @@ class ActionGetClassMaterialLocation(Action):
                 print(result)
             print()
 
-            save_student_progress(sender_id, query, bot_response, complex_tokens, ";".join(location_results))
             dispatcher.utter_message(text="You can find more information in:\n" + "\n".join(location_results))
         else:
             print("\n⚠️  No exact references found, but you might check related PDFs.")

@@ -315,14 +315,14 @@ def set_student_insights(user_email):
         st.subheader("📈 Overview")
         col1, col2 = st.columns(2)
         col1.metric("Total Questions", len(df_filtered))
-        col2.metric("Unique Days Active", df_filtered["date"].nunique())
+        col2.metric("Active Days", df_filtered["date"].nunique())
         #col3.metric("First Interaction", df_filtered["date"].min())
         #col4.metric("Last Interaction", df_filtered["date"].max())
 
         # Topic Frequency Analysis
         st.subheader("📚 Most Discussed Topics")
         # Split the relevant_tokens strings and flatten the list
-        all_topics = [topic for topics_str in df_filtered["relevant_tokens"] for topic in topics_str.split(";")]
+        all_topics = [topic for topics_str in df_filtered["relevant_tokens"] for topic in topics_str.split(",")]
         topic_counts = pd.Series(all_topics).value_counts().reset_index()
         topic_counts.columns = ["Topic", "Frequency"]
         st.bar_chart(topic_counts.set_index("Topic"))
@@ -332,7 +332,7 @@ def set_student_insights(user_email):
         st.subheader("📄 Reference Material Usage")
         if df_filtered["pdfs"].notna().sum() > 0:
             pdf_counts = pd.Series(
-                [pdf.split(" (Pages")[0].strip() for pdf_list in df_filtered["pdfs"].dropna() for pdf in pdf_list.split(";")]
+                [pdf.split(" (Pages")[0].strip() for pdf_list in df_filtered["pdfs"].dropna() for pdf in pdf_list.split(",")]
             ).value_counts().reset_index()
             pdf_counts.columns = ["PDF Name", "Count"]
             st.bar_chart(pdf_counts.set_index("PDF Name"))

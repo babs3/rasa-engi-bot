@@ -32,7 +32,7 @@ def save_student_progress(user_email, user_message, bot_response, tokens, pfds):
     user = cur.fetchone()
 
     # concatenate the tokens in a string format
-    tokens = '; '.join(tokens)
+    tokens = ','.join(tokens)
 
     if user:
         user_id = user['id']
