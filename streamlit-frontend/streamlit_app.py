@@ -13,6 +13,9 @@ import re
 from streamlit_cookies_manager import EncryptedCookieManager
 from time import sleep
 import warnings
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Suppress Streamlit deprecation warnings
 warnings.filterwarnings("ignore")
@@ -56,14 +59,14 @@ def main():
                 cookies.save()
                 sleep(1)  # Add a delay to give time to save cookies
                 st.rerun()
-            # UI Layout
-            st.title("📊 Student Progress Dashboard")
-            st.subheader("📈 Overview")
+            
+            set_student_insights(user_email)
+
         else:
             st.info("Please log in or register.")
 
-    if "scroll_down" not in st.session_state:
-        st.session_state["scroll_down"] = True
+    #if "scroll_down" not in st.session_state:
+    st.session_state["scroll_down"] = True
     
     if "display_message_separator" not in cookies:
         cookies["display_message_separator"] = "True"
@@ -132,6 +135,23 @@ def load_chat_history(user_email):
         messages.append({"role": "assistant", "content": entry["response"]})
 
     return messages  # Return structured messages
+
+def get_student_progress(user_email):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    cur.execute("""
+        SELECT question, response, pdfs, timestamp
+        FROM student_progress
+        WHERE student_id = (SELECT id FROM "users" WHERE email = %s)
+        ORDER BY timestamp ASC;
+    """, (user_email,))
+    data = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return pd.DataFrame(data, columns=["question", "response", "pdfs", "timestamp"])
+
 
 def register_form():
     st.subheader("Create a New Account")
@@ -248,6 +268,9 @@ def chat_interface():
     # Display separator after the last past message
     if cookies["display_message_separator"] == "True":
         current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        scroll_to_here(0, key='bottom')  # Smooth scroll to the bottom of the page
+        st.session_state.scroll_down = False
         
         # Enhanced separator styling
         st.markdown(
@@ -260,20 +283,71 @@ def chat_interface():
             unsafe_allow_html=True
         )
 
+    st.text_input("Type your message:", key="user_input", on_change=trigger_bot_thinking)
+
     # Handle scrolling to the bottom
     if st.session_state.scroll_down:
         scroll_to_here(0, key='bottom')  # Smooth scroll to the bottom of the page
         st.session_state.scroll_down = False  # Reset the scroll state
 
-    st.text_input("Type your message:", key="user_input", on_change=trigger_bot_thinking)
+def set_student_insights(user_email):
+    # UI Layout
+    df = get_student_progress(user_email)
+    st.title("📊 Student Progress Dashboard")
+
+    if df.empty:
+        st.info("No interaction history found.")
+    else:
+        # Convert timestamp to datetime
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        df["date"] = df["timestamp"].dt.date
+
+        # Sidebar Filters
+        st.sidebar.header("📅 Filter Data")
+        start_date = st.sidebar.date_input("Start Date", min(df["date"]))
+        end_date = st.sidebar.date_input("End Date", max(df["date"]))
+
+        df_filtered = df[(df["date"] >= start_date) & (df["date"] <= end_date)]
+
+        # General Stats
+        st.subheader("📈 Overview")
+        col1, col2, col3, col4 = st.columns(2)
+        col1.metric("Total Questions", len(df_filtered))
+        col2.metric("Unique Days Active", df_filtered["date"].nunique())
+        #col3.metric("First Interaction", df_filtered["date"].min())
+        #col4.metric("Last Interaction", df_filtered["date"].max())
+
+        # Topic Frequency Analysis
+        st.subheader("📚 Most Discussed Topics")
+        topic_counts = df_filtered["question"].value_counts().reset_index()
+        topic_counts.columns = ["Topic", "Frequency"]
+        st.bar_chart(topic_counts.set_index("Topic"))
+
+        # Reference Materials Usage
+        st.subheader("📄 Reference Material Usage")
+        if df_filtered["pdfs"].notna().sum() > 0:
+            pdf_counts = pd.Series(
+                [pdf.split(" (Pages")[0].strip() for pdf_list in df_filtered["pdfs"].dropna() for pdf in pdf_list.split(";")]
+            ).value_counts().reset_index()
+            pdf_counts.columns = ["PDF Name", "Count"]
+            st.bar_chart(pdf_counts.set_index("PDF Name"))
+        else:
+            st.write("No reference materials used.")
+
+        # Engagement Over Time
+        st.subheader("📅 Engagement Over Time")
+        daily_counts = df_filtered.groupby("date").size().reset_index(name="Questions")
+        st.line_chart(daily_counts.set_index("date"))
+
+        # Display Interaction History
+        st.subheader("📝 Your Question History")
+        st.dataframe(df_filtered[["date", "question", "pdfs"]].rename(columns={"date": "Date", "question": "Question", "pdfs": "Referenced PDFs"}))
 
 
 def trigger_bot_thinking():
     cookies["display_message_separator"] = "False"
 
     st.session_state["messages"].append({"role": "user", "content": st.session_state.user_input})
-
-    #st.session_state.scroll_down = True  # Scroll to the bottom
 
     # Step 2: Process the response after UI refresh
     response = send_message(st.session_state.user_input, cookies.get("user_email"))
