@@ -15,6 +15,11 @@ Stop and Remove Containers Gracefully
 ```
 docker-compose down
 ```
+If I need to change the database configuration:
+```
+docker-compose down -v  # Stops all services and removes named volumes
+```
+
 Open ```http://localhost:8501/``` to test the bot.
 
 **Note:** the `.env` file must be on root directory and must contain keys in the form `key_name=secret_value`
@@ -40,7 +45,16 @@ If something goes wrong, undo the last migration:
 ```
 flask db downgrade
 ```
-
+**NOTE:** If you get some error like ```ERROR [flask_migrate] Error: Can't locate revision identified by [revision-id]```, just run the following:
+```
+flask db revision --rev-id [revision-id]
+```
+```
+flask db migrate
+```
+```
+flask db upgrade
+```
 ## How to Visualize the Database?
 
 Access the PostgreSQL container:

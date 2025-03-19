@@ -3,7 +3,7 @@ from datetime import datetime
 
 db = SQLAlchemy()
 
-class User(db.Model):
+class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     role = db.Column(db.String(20), nullable=False)  # "student" or "teacher"
     email = db.Column(db.String(100), unique=True, nullable=False)
@@ -27,14 +27,26 @@ class User(db.Model):
         self.courses = ",".join(courses) if courses else None  # Convert list to comma-separated string if needed
 
 
-class UserHistory(db.Model):
+class MessageHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user_message = db.Column(db.Text, nullable=False)
-    bot_response = db.Column(db.Text, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    question = db.Column(db.Text, nullable=False)
+    response = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __init__(self, user_id, user_message, bot_response):
         self.user_id = user_id
+        self.user_message = user_message
+        self.bot_response = bot_response
+
+class StudentProgress(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    question = db.Column(db.Text, nullable=False)
+    response = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __init__(self, student_id, user_message, bot_response):
+        self.student_id = student_id
         self.user_message = user_message
         self.bot_response = bot_response
