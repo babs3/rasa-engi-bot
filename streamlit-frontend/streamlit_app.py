@@ -271,7 +271,7 @@ def chat_interface():
 def trigger_bot_thinking():
     cookies["display_message_separator"] = "False"
 
-    st.session_state["messages"].append({"role": "users", "content": st.session_state.user_input})
+    st.session_state["messages"].append({"role": "user", "content": st.session_state.user_input})
 
     #st.session_state.scroll_down = True  # Scroll to the bottom
 
@@ -279,7 +279,6 @@ def trigger_bot_thinking():
     response = send_message(st.session_state.user_input, cookies.get("user_email"))
 
     if response:
-        st.session_state["messages"].pop()  # Remove "thinking" message
         st.session_state["messages"].append({"role": "assistant", "content": response})
         save_chat_history(cookies.get("user_email"), st.session_state.user_input, response)
 

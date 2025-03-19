@@ -24,7 +24,7 @@ DB_CONFIG = {
 def get_db_connection():
     return psycopg2.connect(**DB_CONFIG)
 
-def save_student_progress(user_email, user_message, bot_response):
+def save_student_progress(user_email, user_message, bot_response, pfds):
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
@@ -35,8 +35,8 @@ def save_student_progress(user_email, user_message, bot_response):
     if user:
         user_id = user['id']
         cur.execute(
-            "INSERT INTO student_progress (student_id, question, response, timestamp) VALUES (%s, %s, %s, NOW())",
-            (user_id, user_message, bot_response)
+            "INSERT INTO student_progress (student_id, question, response, pdfs, timestamp) VALUES (%s, %s, %s, %s, NOW())",
+            (user_id, user_message, bot_response, pfds)
         )
         conn.commit()
     

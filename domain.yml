@@ -20,6 +20,16 @@ slots:
     type: list
     mappings:
       - type: custom
+
+  bot_response:
+    type: list
+    mappings:
+      - type: custom
+  
+  sender_id:
+    type: text
+    mappings:
+      - type: custom
       
 responses:
 

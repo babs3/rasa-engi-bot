@@ -154,9 +154,7 @@ class ActionFetchClassMaterial(Action):
             print("\n📢 Sending to Gemini API for Summarization...")
             print(f"🔹 Prompt: {prompt[:200]}\n")  # Show only first 200 chars for readability
             
-            # later remove from here
-            save_student_progress(sender_id, user_message, "bot response :)")
-
+            formatted_response = "Sorry, I couldn't generate a response."
             try:
                 g_model = genai.GenerativeModel("gemini-1.5-base-latest")
                 response = g_model.generate_content(prompt)
@@ -166,8 +164,6 @@ class ActionFetchClassMaterial(Action):
                     formatted_response = format_gemini_response(response.text)
                     print(formatted_response)
                     dispatcher.utter_message(text=formatted_response)
-
-                    #save_student_progress(sender_id, user_message, formatted_response)
                 else:
                     print("\n⚠️ Gemini Response is empty.")
                     dispatcher.utter_message(text="Sorry, I couldn't generate a response.")
@@ -180,7 +176,9 @@ class ActionFetchClassMaterial(Action):
 
         return  [
             SlotSet("user_query", query),  # Store the query
-            SlotSet("materials_location", gemini_results)  # Store selected materials
+            SlotSet("materials_location", gemini_results),  # Store selected materials
+            SlotSet("bot_response", formatted_response),  # Store the bot response
+            SlotSet("sender_id", sender_id)  # Store the sender ID
             ]
 
 
@@ -192,6 +190,8 @@ class ActionGetClassMaterialLocation(Action):
     def run(self, dispatcher, tracker, domain):
 
         selected_materials = tracker.get_slot("materials_location")
+        bot_response = tracker.get_slot("bot_response")
+        sender_id = tracker.get_slot("sender_id")
         query = tracker.get_slot("user_query") # already treated in last function
 
         print(f"\n\n 🔖 --------- Getting class materials location --------- 🔖 ")
@@ -273,6 +273,8 @@ class ActionGetClassMaterialLocation(Action):
             for result in location_results:
                 print(result)
             print()
+
+            save_student_progress(sender_id, query, bot_response, ";".join(location_results))
             dispatcher.utter_message(text="You can find more information in:\n" + "\n".join(location_results))
         else:
             print("\n⚠️  No exact references found, but you might check related PDFs.")
