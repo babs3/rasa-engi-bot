@@ -14,8 +14,6 @@ from streamlit_cookies_manager import EncryptedCookieManager
 from time import sleep
 import warnings
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 # Suppress Streamlit deprecation warnings
 warnings.filterwarnings("ignore")
@@ -141,7 +139,7 @@ def get_student_progress(user_email):
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
     cur.execute("""
-        SELECT question, response, pdfs, timestamp
+        SELECT question, response, relevant_tokens, pdfs, timestamp
         FROM student_progress
         WHERE student_id = (SELECT id FROM "users" WHERE email = %s)
         ORDER BY timestamp ASC;
@@ -150,7 +148,7 @@ def get_student_progress(user_email):
     cur.close()
     conn.close()
 
-    return pd.DataFrame(data, columns=["question", "response", "pdfs", "timestamp"])
+    return pd.DataFrame(data, columns=["question", "response", "relevant_tokens", "pdfs", "timestamp"])
 
 
 def register_form():
@@ -283,12 +281,13 @@ def chat_interface():
             unsafe_allow_html=True
         )
 
-    st.text_input("Type your message:", key="user_input", on_change=trigger_bot_thinking)
-
     # Handle scrolling to the bottom
     if st.session_state.scroll_down:
         scroll_to_here(0, key='bottom')  # Smooth scroll to the bottom of the page
         st.session_state.scroll_down = False  # Reset the scroll state
+
+    st.text_input("Type your message:", key="user_input", on_change=trigger_bot_thinking)
+
 
 def set_student_insights(user_email):
     # UI Layout
@@ -311,7 +310,7 @@ def set_student_insights(user_email):
 
         # General Stats
         st.subheader("📈 Overview")
-        col1, col2, col3, col4 = st.columns(2)
+        col1, col2 = st.columns(2)
         col1.metric("Total Questions", len(df_filtered))
         col2.metric("Unique Days Active", df_filtered["date"].nunique())
         #col3.metric("First Interaction", df_filtered["date"].min())
@@ -319,7 +318,7 @@ def set_student_insights(user_email):
 
         # Topic Frequency Analysis
         st.subheader("📚 Most Discussed Topics")
-        topic_counts = df_filtered["question"].value_counts().reset_index()
+        topic_counts = df_filtered["relevant_tokens"].value_counts().reset_index()
         topic_counts.columns = ["Topic", "Frequency"]
         st.bar_chart(topic_counts.set_index("Topic"))
 

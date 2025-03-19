@@ -3,5 +3,3 @@ requests
 psycopg2-binary  # PostgreSQL connection
 streamlit-scroll-to-top
 streamlit-cookies-manager
-matplotlib
-seaborn

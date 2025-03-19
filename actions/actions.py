@@ -200,7 +200,7 @@ class ActionGetClassMaterialLocation(Action):
         # Step 1: Extract both complex & simple tokens
         complex_tokens = extract_complex_tokens(query)  # e.g., ["pestel analysis"]
         simple_tokens = extract_simple_tokens(query)  # e.g., ["pestel", "analysis"]
-        print(f"\n📖 Finding material location for:\n - {complex_tokens}\n - {simple_tokens}")
+        print(f"\n📖📖 Finding material location for:\n - {complex_tokens}\n - {simple_tokens}")
 
         # Step 3: Expand using **weighted synonyms** (prefer closer meanings)
         expanded_complex = expand_query_with_weighted_synonyms(complex_tokens)
@@ -274,7 +274,7 @@ class ActionGetClassMaterialLocation(Action):
                 print(result)
             print()
 
-            save_student_progress(sender_id, query, bot_response, ";".join(location_results))
+            save_student_progress(sender_id, query, bot_response, complex_tokens, ";".join(location_results))
             dispatcher.utter_message(text="You can find more information in:\n" + "\n".join(location_results))
         else:
             print("\n⚠️  No exact references found, but you might check related PDFs.")

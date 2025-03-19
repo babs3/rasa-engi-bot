@@ -44,6 +44,7 @@ class StudentProgress(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     question = db.Column(db.Text, nullable=False)
     response = db.Column(db.Text, nullable=False)
+    relevant_tokens = db.Column(db.Text, nullable=True)  # Comma-separated values (;)
     pdfs = db.Column(db.Text, nullable=True)  # Comma-separated values (;)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
