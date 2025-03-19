@@ -32,14 +32,10 @@ class ActionFetchClassMaterial(Action):
 
         user_message = tracker.latest_message.get("text")
         sender_id = tracker.sender_id  # ✅ Retrieves the "sender" field
-        metadata_email = tracker.latest_message.get("metadata", {}).get("user_email")
+        #metadata_email = tracker.latest_message.get("metadata", {}).get("user_email")
 
-        print(f"📩 Sender ID: {sender_id}")  # This should match user_email in your API request
-        print(f"📨 User ({metadata_email}) said: {user_message}")
-        
-        query = tracker.latest_message.get("text")  # Get user query
-        print(f"\n🧒 User query: '{query}'")
-        query = treat_raw_query(query)
+        print(f"\n🧒 User ({sender_id}) said: {user_message} 📩")
+        query = treat_raw_query(user_message)
 
         # === DENSE (Vector) SEARCH === #
         print(f"\n🔛 Getting query embeddings for query: '{query}'\n...")
@@ -143,8 +139,8 @@ class ActionFetchClassMaterial(Action):
 
             # **Sort by PDF name (A-Z) and then by page number (ascending)**
             document_entries.sort(key=lambda x: (x[0].lower(), x[1]))
-            gemini_results = group_pages_by_pdf(document_entries)
-            
+            gemini_results = group_pages_by_pdf(document_entries)  
+
             # Format results
             results_text = []
             for text_chunk, meta, score in selected_results:
@@ -157,7 +153,7 @@ class ActionFetchClassMaterial(Action):
             prompt = f"Use the following raw educational content to answer the student query: '{query}'. Make the provided content more readable to the student: \n{raw_text} "
 
             print("\n📢 Sending to Gemini API for Summarization...")
-            print(f"🔹 Prompt: {prompt[:200]}\n")  # Show only first 200 chars for readability
+            #print(f"🔹 Prompt: {prompt[:200]}\n")  # Show only first 200 chars for readability
             
             formatted_response = "Sorry, I couldn't generate a response..."
             try:
@@ -265,7 +261,6 @@ class ActionGetClassMaterialLocation(Action):
                 
         pdfs_insights = list(set(pdfs_insights))
 
-
         # **Sort by PDF name (A-Z) and then by page number (ascending)**
         document_entries.sort(key=lambda x: (x[0].lower(), x[1]))  
 
@@ -275,10 +270,11 @@ class ActionGetClassMaterialLocation(Action):
         if location_results:
 
             if len(document_entries) > len(selected_materials) * 3: # means that the tokenization went wrong
+                print("\n👻 --> Tokenization went wrong, using pdfs from slot")
                 location_results = selected_materials
-                save_student_progress(sender_id, query, bot_response, simple_tokens, ", ".join(pdfs_insights))
-            else:
                 save_student_progress(sender_id, query, bot_response, simple_tokens, ", ".join(pdfs))
+            else:
+                save_student_progress(sender_id, query, bot_response, simple_tokens, ", ".join(pdfs_insights))
 
             print("\n🎯 Material location for query found!")
             print("\n📌 FINAL SORTED RESULTS:")
