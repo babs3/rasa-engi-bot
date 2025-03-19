@@ -28,13 +28,14 @@ def save_student_progress(user_email, user_message, bot_response):
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
-    cur.execute('SELECT id FROM "user" WHERE email = %s', (user_email,))
+    cur.execute('SELECT id FROM "users" WHERE email = %s', (user_email,))
     user = cur.fetchone()
+    print(f"🔍 User found: {user}")
 
     if user:
         user_id = user['id']
         cur.execute(
-            "INSERT INTO user_history (user_id, user_message, bot_response, timestamp) VALUES (%s, %s, %s, NOW())",
+            "INSERT INTO student_progress (student_id, question, response, timestamp) VALUES (%s, %s, %s, NOW())",
             (user_id, user_message, bot_response)
         )
         conn.commit()

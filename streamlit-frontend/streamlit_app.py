@@ -120,7 +120,7 @@ def load_chat_history(user_email):
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
-    cur.execute('SELECT user_message, bot_response FROM user_history WHERE user_id = (SELECT id FROM "user" WHERE email = %s) ORDER BY timestamp ASC', (user_email,))
+    cur.execute('SELECT question, response FROM message_history WHERE user_id = (SELECT id FROM "users" WHERE email = %s) ORDER BY timestamp ASC', (user_email,))
     history = cur.fetchall()
 
     cur.close()
@@ -128,8 +128,8 @@ def load_chat_history(user_email):
 
     messages = []
     for entry in history:
-        messages.append({"role": "user", "content": entry["user_message"]})
-        messages.append({"role": "assistant", "content": entry["bot_response"]})
+        messages.append({"role": "user", "content": entry["question"]})
+        messages.append({"role": "assistant", "content": entry["response"]})
 
     return messages  # Return structured messages
 
@@ -197,15 +197,9 @@ def register_user(user_data):
 
     # Insert user into database
     cur.execute(
-        'INSERT INTO "user" (email, password, role, up_id, course, year, courses) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id',
+        'INSERT INTO "users" (email, password, role, up_id, course, year, courses) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id',
         (user_data["email"], user_data["password"], user_data["role"], user_data["up_id"], user_data["course"], user_data["year"], teacher_courses)
     )
-    #user_id = cur.fetchone()[0]
-
-    # Insert teacher courses if applicable
-    #if user_data["role"] == "Teacher" and user_data["courses"]:
-    #    for course in user_data["courses"]:
-    #        cur.execute('INSERT INTO teacher_courses (user_id, course) VALUES (%s, %s)', (user_id, course))
 
     conn.commit()
     cur.close()
@@ -222,7 +216,7 @@ def authenticate_user(email, password):
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
     hashed_password = hash_password(password)
-    cur.execute('SELECT * FROM "user" WHERE email = %s AND password = %s', (email, hashed_password))
+    cur.execute('SELECT * FROM "users" WHERE email = %s AND password = %s', (email, hashed_password))
     user = cur.fetchone()
     if user:
         cur.close()
@@ -234,7 +228,7 @@ def authenticate_user(email, password):
 def user_exists(email):
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute('SELECT * FROM "user" WHERE email = %s', (email,))
+    cur.execute('SELECT * FROM "users" WHERE email = %s', (email,))
     user = cur.fetchone()
     cur.close()
     conn.close()
@@ -277,7 +271,7 @@ def chat_interface():
 def trigger_bot_thinking():
     cookies["display_message_separator"] = "False"
 
-    st.session_state["messages"].append({"role": "user", "content": st.session_state.user_input})
+    st.session_state["messages"].append({"role": "users", "content": st.session_state.user_input})
 
     #st.session_state.scroll_down = True  # Scroll to the bottom
 
@@ -323,13 +317,13 @@ def save_chat_history(user_email, user_message, bot_response):
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
-    cur.execute('SELECT id FROM "user" WHERE email = %s', (user_email,))
+    cur.execute('SELECT id FROM "users" WHERE email = %s', (user_email,))
     user = cur.fetchone()
 
     if user:
         user_id = user['id']
         cur.execute(
-            "INSERT INTO user_history (user_id, user_message, bot_response, timestamp) VALUES (%s, %s, %s, NOW())",
+            "INSERT INTO message_history (user_id, question, response, timestamp) VALUES (%s, %s, %s, NOW())",
             (user_id, user_message, bot_response)
         )
         conn.commit()

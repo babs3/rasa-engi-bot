@@ -153,9 +153,12 @@ class ActionFetchClassMaterial(Action):
 
             print("\n📢 Sending to Gemini API for Summarization...")
             print(f"🔹 Prompt: {prompt[:200]}\n")  # Show only first 200 chars for readability
+            
+            # later remove from here
+            save_student_progress(sender_id, user_message, "bot response :)")
 
             try:
-                g_model = genai.GenerativeModel("gemini-1.5-pro-latest")
+                g_model = genai.GenerativeModel("gemini-1.5-base-latest")
                 response = g_model.generate_content(prompt)
 
                 if hasattr(response, "text") and response.text:
@@ -164,7 +167,7 @@ class ActionFetchClassMaterial(Action):
                     print(formatted_response)
                     dispatcher.utter_message(text=formatted_response)
 
-                    save_student_progress(sender_id, user_message, formatted_response)
+                    #save_student_progress(sender_id, user_message, formatted_response)
                 else:
                     print("\n⚠️ Gemini Response is empty.")
                     dispatcher.utter_message(text="Sorry, I couldn't generate a response.")
