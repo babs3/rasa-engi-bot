@@ -68,9 +68,6 @@ def main():
     
     if "display_message_separator" not in cookies:
         cookies["display_message_separator"] = "True"
-
-    if "user_input" not in st.session_state:
-        st.session_state.user_input = ""
     
     if "input_disabled" not in st.session_state:
         st.session_state.input_disabled = "False"
@@ -286,7 +283,13 @@ def chat_interface():
         scroll_to_here(0, key='bottom')  # Smooth scroll to the bottom of the page
         st.session_state.scroll_down = False  # Reset the scroll state
 
-    st.text_input("Type your message:", key="user_input", on_change=trigger_bot_thinking)
+    # Text Input Form to only trigger on Enter
+    with st.form(key="input_form", clear_on_submit=True):
+        user_input = st.text_input("Type your message:", key="user_input")
+        submit_button = st.form_submit_button("Send")
+        
+    if submit_button:
+        trigger_bot_thinking()
 
 
 def set_student_insights(user_email):
@@ -358,8 +361,6 @@ def trigger_bot_thinking():
         st.session_state["messages"].append({"role": "assistant", "content": response})
         save_chat_history(cookies.get("user_email"), st.session_state.user_input, response)
 
-    # Step 3: Enable input field again 
-    st.session_state.user_input = ""  # Clear input field
     st.rerun()
 
     
