@@ -87,9 +87,13 @@ def extract_complex_tokens(query): # ['pestel analysis']
     keywords = list(dict.fromkeys(keywords))
 
     # === Filter out generic words identified by TF-IDF ===
-    filtered_keywords = [kw for kw in keywords if kw.lower() not in generic_words]
+    filtered_keywords = [kw for kw in keywords if not is_generic_word(kw)]
 
     return filtered_keywords
+
+def is_generic_word(word):
+    """Check if a word is generic based on a precomputed set."""
+    return word.lower() in generic_words
 
 
 def extract_key_expressions(text): # ['pestel', 'analysis', 'pestel analysis']

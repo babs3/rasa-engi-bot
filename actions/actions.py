@@ -62,8 +62,8 @@ class ActionFetchClassMaterial(Action):
         expanded_simple = expand_query_with_weighted_synonyms(simple_tokens)
         print(f"🔄 Expanded tokens with synonyms:\n - {expanded_complex}\n - {expanded_simple}")
 
-        specific_terms = [word for word in expanded_simple if not is_common_word(word)]
-        generic_terms = [word for word in expanded_simple if is_common_word(word)]
+        specific_terms = [word for word in expanded_simple if not is_generic_word(word)]
+        generic_terms = [word for word in expanded_simple if is_generic_word(word)]
 
         print(f"\n🔍 Specific terms: {specific_terms}")
         print(f"📌 Generic terms: {generic_terms}")
@@ -217,8 +217,8 @@ class ActionGetClassMaterialLocation(Action):
 
         top_indices = np.argsort(final_scores)[::-1][:10]  # Top 10 results
 
-        specific_terms = [word for word in expanded_simple if not is_common_word(word)]
-        generic_terms = [word for word in expanded_simple if is_common_word(word)]
+        specific_terms = [word for word in expanded_simple if not is_generic_word(word)]
+        generic_terms = [word for word in expanded_simple if is_generic_word(word)]
 
         print(f"\n🔍 Specific terms: {specific_terms}")
         print(f"📌 Generic terms: {generic_terms}")
