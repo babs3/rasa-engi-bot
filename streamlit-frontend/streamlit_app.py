@@ -315,11 +315,11 @@ def set_student_insights(user_email):
         col1, col2 = st.columns(2)
         col1.metric("Total Questions", len(df_filtered))
         col2.metric("Active Days", df_filtered["date"].nunique())
-        #col3.metric("First Interaction", df_filtered["date"].min())
-        #col4.metric("Last Interaction", df_filtered["date"].max())
 
         # Topic Frequency Analysis
         st.subheader("📚 Most Discussed Topics")
+        # Convert topics to lowercase before counting
+        df_filtered["topic"] = df_filtered["topic"].str.lower()
         topic_counts = df_filtered["topic"].value_counts().reset_index()
         topic_counts.columns = ["Topic", "Frequency"]
         st.bar_chart(topic_counts.set_index("Topic"))
