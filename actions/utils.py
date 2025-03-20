@@ -3,13 +3,12 @@ from fuzzywuzzy import fuzz
 import pickle
 from difflib import get_close_matches
 import re
+from itertools import product
+from nltk.corpus import wordnet
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from spacy.matcher import PhraseMatcher
-from spacy.tokens import DocBin
-from collections import Counter
-from itertools import islice
 import os
+import json
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -49,8 +48,6 @@ def save_student_progress(user_email, user_message, bot_response, tokens, pfds):
     
     cur.close()
     conn.close()
-
-import json
 
 def load_generic_words():
     """Load generic words from a saved file."""
@@ -116,10 +113,6 @@ def extract_key_expressions(text): # ['pestel', 'analysis', 'pestel analysis']
 
 
 # === EXPAND SYNONYMS === #
-from itertools import product
-import nltk
-from nltk.corpus import wordnet
-
 def get_synonyms(word):
     """Fetch synonyms from WordNet."""
     synonyms = set()
@@ -166,9 +159,6 @@ def expand_query_with_weighted_synonyms(query_expressions):
 
     return list(expanded_queries)
 
-import re
-
-import re
 
 def format_gemini_response(text: str) -> str:
     """
@@ -189,8 +179,6 @@ def format_gemini_response(text: str) -> str:
     text = text.replace("$", "\\$")
     
     return text
-
-
 
 def lemmatize_word(word):
     """Returns the lemma of a given word (e.g., 'methods' → 'method')."""
@@ -222,17 +210,6 @@ def fuzzy_match(query_tokens, document_tokens, threshold=85):
                     return True  
 
     return False  # No match found
-
-from wordfreq import word_frequency
-
-def is_common_word(word, threshold=0.00001):
-    """
-    Check if a word is common based on its frequency in large corpora.
-    Lower threshold = more words classified as common.
-    """
-    freq = word_frequency(word, 'en')  # Get word frequency
-    return freq > threshold  # If frequency is high, it's a common word
-
 
 def extract_simple_tokens(query): # ['pestel', 'analysis']
     """Extracts only meaningful single-word tokens from a query (excluding stopwords & phrases)."""
