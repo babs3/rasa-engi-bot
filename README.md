@@ -3,9 +3,9 @@ Create vector_store folder
 ```
 python process_pdfs.py
 ```
-Create generic_words.json file
+Create generic_words.json file (need to use lower python version because of spacy)
 ```
-python generic_words.py
+py -3.10 generic_words.py
 ```
 Train a model
 ```

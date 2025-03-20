@@ -12,7 +12,6 @@ nltk
 wordfreq
 sentence-transformers
 faiss-cpu
-pymupdf
 sentence-transformers
 flask
 requests
