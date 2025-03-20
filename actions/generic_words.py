@@ -5,14 +5,15 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from collections import defaultdict
 import fitz  # PyMuPDF
 import os
+import numpy as np
 
 # Load spaCy model
 nlp = spacy.load("en_core_web_sm")
 
 # Parameters
-MIN_IDF_THRESHOLD = 4  # Minimum IDF score to consider a word as specific (Tune this value as needed)
 PDF_FOLDER = os.path.join(os.path.dirname(__file__), "materials", "GEE_pdfs")
 generic_words = set()
+DEFAULT_PERCENTILE = 20  # Adjust this to control filtering (10-30% is typical)
 
 def extract_text_by_page(pdf_path):
     """Extracts text from each page of a PDF separately."""
@@ -49,13 +50,19 @@ def detect_generic_words(documents):
     feature_names = vectorizer.get_feature_names_out()
     idf_scores = vectorizer.idf_
 
-    print(f"\nmin idf: {min(idf_scores)}")
-    print(f"max idf: {max(idf_scores)}")
-    print(f"mean idf: {sum(idf_scores) / len(idf_scores)}")
+    # Compute dynamic threshold using percentiles
+    min_idf = np.min(idf_scores)
+    max_idf = np.max(idf_scores)
+    mean_idf = np.mean(idf_scores)
+    threshold = np.percentile(idf_scores, DEFAULT_PERCENTILE)  # Set dynamically
+    
+    # If percentile-based filtering isn’t precise enough, try:
+    #threshold = mean_idf - 0.5 * np.std(idf_scores)  # Mean minus half std deviation
+
+    print(f"IDF Stats -> Min: {min_idf:.2f}, Max: {max_idf:.2f}, Mean: {mean_idf:.2f}, Threshold: {threshold:.2f}")
 
     # Identify words with low IDF (common words)
-    generic_words = {feature_names[i] for i, score in enumerate(idf_scores) if score < MIN_IDF_THRESHOLD}  
-
+    generic_words = {feature_names[i] for i, score in enumerate(idf_scores) if score < threshold}
 
     # Save generic words to file for reuse
     with open(os.path.join(os.path.dirname(__file__), "generic_words.json"), "w") as file:
