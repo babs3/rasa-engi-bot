@@ -168,18 +168,28 @@ def expand_query_with_weighted_synonyms(query_expressions):
 
 import re
 
+import re
+
 def format_gemini_response(text: str) -> str:
     """
-    Replace triple backticks (```) with ** for bold formatting.
+    Format Gemini response for Streamlit:
+    - Replace triple backticks (```) with ** for bold formatting.
+    - Escape $ symbols to prevent unintended formatting in Streamlit.
     
     Args:
         text (str): The response text from Gemini.
     
     Returns:
-        str: The formatted text with ** tags instead of triple backticks.
+        str: The formatted text with ** tags instead of triple backticks and escaped $ symbols.
     """
+    # Replace triple backticks with bold (**)
     text = re.sub(r'```(.*?)```', r'**\1**', text, flags=re.DOTALL)
+    
+    # Escape $ symbols (replace single $ with \$ to prevent LaTeX formatting in Streamlit)
+    text = text.replace("$", "\\$")
+    
     return text
+
 
 
 def lemmatize_word(word):

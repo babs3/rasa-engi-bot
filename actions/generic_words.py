@@ -59,7 +59,7 @@ def detect_generic_words(documents):
     # If percentile-based filtering isn’t precise enough, try:
     #threshold = mean_idf - 0.5 * np.std(idf_scores)  # Mean minus half std deviation
 
-    print(f"IDF Stats -> Min: {min_idf:.2f}, Max: {max_idf:.2f}, Mean: {mean_idf:.2f}, Threshold: {threshold:.2f}")
+    #print(f"IDF Stats -> Min: {min_idf:.2f}, Max: {max_idf:.2f}, Mean: {mean_idf:.2f}, Threshold: {threshold:.2f}")
 
     # Identify words with low IDF (common words)
     generic_words = {feature_names[i] for i, score in enumerate(idf_scores) if score < threshold}
