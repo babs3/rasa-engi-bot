@@ -1,4 +1,12 @@
 ## Bot Pipeline
+Create vector_store folder
+```
+python process_pdfs.py
+```
+Create generic_words.json file
+```
+python generic_words.py
+```
 Train a model
 ```
 docker run -v ${PWD}:/app rasa/rasa:3.6.20-full train

@@ -15,6 +15,7 @@ services:
       dockerfile: actions/Dockerfile
     volumes:
       - ./actions:/app/actions
+      - ./vector_store:/app/vector_store
     ports:
       - 5055:5055
     networks:

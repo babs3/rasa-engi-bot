@@ -50,7 +50,7 @@ def load_generic_words():
     """Load generic words from a saved file."""
     global generic_words
     try:
-        with open(os.path.join(os.path.dirname(__file__), "generic_words.json"), "r") as file:
+        with open("generic_words.json", "r") as file:
             generic_words = set(json.load(file))
     except FileNotFoundError:
         generic_words = set()

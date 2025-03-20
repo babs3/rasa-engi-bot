@@ -8,7 +8,6 @@ from sentence_transformers import SentenceTransformer
 import os
 from rasa_sdk.events import SlotSet
 from .utils import *
-from .generic_words import *
 
 # Load sentence transformer model
 model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -18,8 +17,29 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 # Connect to ChromaDB
 VECTOR_DB_PATH = "vector_store"
+
+# Load collection data
+with open(f"{VECTOR_DB_PATH}/collection_backup.pkl", "rb") as f:
+    collection_data = pickle.load(f)
+
+# Restore data
+documents = collection_data["documents"]
+metadata = collection_data["metadata"]
+embeddings = np.array(collection_data["embeddings"])
+
+# Reinitialize ChromaDB and store data again
 chroma_client = chromadb.PersistentClient(path=VECTOR_DB_PATH)
 collection = chroma_client.get_collection(name="class_materials")
+
+for i, doc_text in enumerate(documents):
+    collection.add(
+        ids=[str(i)],
+        embeddings=[embeddings[i].tolist()],
+        metadatas=[metadata[i]],
+        documents=[doc_text]
+    )
+print("\n✅ Collection reloaded successfully.")
+
 
 # === ACTION 1: FETCH RAW MATERIAL === #
 class ActionFetchClassMaterial(Action):
