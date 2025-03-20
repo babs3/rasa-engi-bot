@@ -283,6 +283,8 @@ class ActionGetClassMaterialLocation(Action):
             dispatcher.utter_message(text="You can find more information in:\n" + "\n".join(location_results))
         else:
             print("\n⚠️  No exact references found, but you might check related PDFs.")
+            
+            save_student_progress(sender_id, query, bot_response, complex_tokens, [])
             dispatcher.utter_message(text="I couldn't find specific page references, but check related PDFs.")
 
         #clear the slots
