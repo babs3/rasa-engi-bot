@@ -136,7 +136,7 @@ def get_student_progress(user_email):
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
     cur.execute("""
-        SELECT question, response, relevant_tokens, pdfs, timestamp
+        SELECT question, response, topic, pdfs, timestamp
         FROM student_progress
         WHERE student_id = (SELECT id FROM "users" WHERE email = %s)
         ORDER BY timestamp ASC;
@@ -145,7 +145,7 @@ def get_student_progress(user_email):
     cur.close()
     conn.close()
 
-    return pd.DataFrame(data, columns=["question", "response", "relevant_tokens", "pdfs", "timestamp"])
+    return pd.DataFrame(data, columns=["question", "response", "topic", "pdfs", "timestamp"])
 
 
 def register_form():
@@ -251,7 +251,6 @@ def user_exists(email):
 
 def chat_interface():
     st.title("💬 Chat with EngiBot")
-    st.write(f"**User:** {cookies.get('user_email')}")
 
     if "messages" not in st.session_state:
         st.session_state["messages"] = load_chat_history(cookies.get("user_email"))  # Load previous messages
@@ -321,12 +320,9 @@ def set_student_insights(user_email):
 
         # Topic Frequency Analysis
         st.subheader("📚 Most Discussed Topics")
-        # Split the relevant_tokens strings and flatten the list
-        all_topics = [topic for topics_str in df_filtered["relevant_tokens"] for topic in topics_str.split(",")]
-        topic_counts = pd.Series(all_topics).value_counts().reset_index()
+        topic_counts = df_filtered["topic"].value_counts().reset_index()
         topic_counts.columns = ["Topic", "Frequency"]
         st.bar_chart(topic_counts.set_index("Topic"))
-
 
         # Reference Materials Usage
         st.subheader("📄 Reference Material Usage")

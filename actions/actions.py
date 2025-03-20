@@ -192,6 +192,20 @@ class ActionGetClassMaterialLocation(Action):
         pdfs = tracker.get_slot("pdfs")
         query = tracker.get_slot("user_query") # already treated in last function
 
+        topic = None
+        prompt = f"Given the student query: '{query}', and the response below, what do you consider being the question topic? \n{bot_response} \nPlease reply only with the topic keyword."
+        try:
+            g_model = genai.GenerativeModel("gemini-1.5-pro-latest")
+            response = g_model.generate_content(prompt)
+
+            if hasattr(response, "text") and response.text:
+                topic = response.text
+                print(f"\n🎯 Gemini Response Generated Successfully! \n Topic: {topic}")
+            else:
+                print("\n⚠️ Gemini Response is empty.")
+        except Exception as e:
+            print(f"\n❌ Error calling Gemini API: {e}")
+
         print(f"\n\n 🔖 --------- Getting class materials location --------- 🔖 ")
 
         # === Perform Hyvrid BM25 search === #
@@ -270,9 +284,9 @@ class ActionGetClassMaterialLocation(Action):
             if len(document_entries) > len(selected_materials) * 3: # means that the tokenization went wrong
                 print("\n👻 --> Tokenization went wrong, using pdfs from slot")
                 location_results = selected_materials
-                save_student_progress(sender_id, query, bot_response, complex_tokens, ", ".join(pdfs))
+                save_student_progress(sender_id, query, bot_response, topic, ", ".join(pdfs))
             else:
-                save_student_progress(sender_id, query, bot_response, complex_tokens, ", ".join(pdfs_insights))
+                save_student_progress(sender_id, query, bot_response, topic, ", ".join(pdfs_insights))
 
             print("\n🎯 Material location for query found!")
             print("\n📌 FINAL SORTED RESULTS:")
@@ -284,7 +298,7 @@ class ActionGetClassMaterialLocation(Action):
         else:
             print("\n⚠️  No exact references found, but you might check related PDFs.")
             
-            save_student_progress(sender_id, query, bot_response, complex_tokens, [])
+            save_student_progress(sender_id, query, bot_response, topic, [])
             dispatcher.utter_message(text="I couldn't find specific page references, but check related PDFs.")
 
         #clear the slots
