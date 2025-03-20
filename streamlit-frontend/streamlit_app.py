@@ -14,6 +14,7 @@ from streamlit_cookies_manager import EncryptedCookieManager
 from time import sleep
 import warnings
 import pandas as pd
+from streamlit_extras.stylable_container import stylable_container
 
 # Suppress Streamlit deprecation warnings
 warnings.filterwarnings("ignore")
@@ -41,7 +42,6 @@ def get_db_connection():
 
 # Streamlit UI
 def main():
-
     # Sidebar for logout
     with st.sidebar:
         st.title("Engi-bot")
@@ -50,14 +50,8 @@ def main():
             user_email = cookies.get("user_email")
             st.write(f"Logged in as **{user_email}**")
             if st.button("Logout"):
-                st.session_state.clear()
-                cookies["logged_in"] = "False"
-                cookies["user_email"] = ""
-                cookies["display_message_separator"] = "True"
-                cookies.save()
-                sleep(1)  # Add a delay to give time to save cookies
-                st.rerun()
-            
+                logout()
+
             set_student_insights(user_email)
 
         else:
@@ -77,6 +71,15 @@ def main():
         auth_tabs()
     else:
         chat_interface()
+
+def logout():
+    st.session_state.clear()
+    cookies["logged_in"] = "False"
+    cookies["user_email"] = ""
+    cookies["display_message_separator"] = "True"
+    cookies.save()
+    sleep(1)  
+    st.rerun()
 
 def is_valid_email(email):
     pattern = r'^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$'
@@ -146,7 +149,6 @@ def get_student_progress(user_email):
     conn.close()
 
     return pd.DataFrame(data, columns=["question", "response", "topic", "pdfs", "timestamp"])
-
 
 def register_form():
     st.subheader("Create a New Account")
@@ -249,6 +251,18 @@ def user_exists(email):
     conn.close()
     return user is not None
 
+def display_message_separator():
+    current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    st.markdown(
+        f"""
+        <div style='border-top: 2px solid #4CAF50; margin-top: 20px; margin-bottom: 10px;'></div>
+        <div style='text-align: center; font-size: 14px; color: #4CAF50; margin-bottom: 20px;'>
+            📅 New Messages - {current_date}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 def chat_interface():
     st.title("💬 Chat with EngiBot")
 
@@ -259,36 +273,93 @@ def chat_interface():
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # Display separator after the last past message
-    if cookies["display_message_separator"] == "True":
-        current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        scroll_to_here(0, key='bottom')  # Smooth scroll to the bottom of the page
-        st.session_state.scroll_down = False
-        
-        # Enhanced separator styling
-        st.markdown(
-            f"""
-            <div style='border-top: 2px solid #4CAF50; margin-top: 20px; margin-bottom: 10px;'></div>
-            <div style='text-align: center; font-size: 14px; color: #4CAF50; margin-bottom: 20px;'>
-                📅 New Messages - {current_date}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+    # Display separator for new messages
+    if cookies.get("display_message_separator") == "True":
+        display_message_separator()
 
     # Handle scrolling to the bottom
     if st.session_state.scroll_down:
         scroll_to_here(0, key='bottom')  # Smooth scroll to the bottom of the page
         st.session_state.scroll_down = False  # Reset the scroll state
 
-    # Text Input Form to only trigger on Enter
-    with st.form(key="input_form", clear_on_submit=True):
-        user_input = st.text_input("Type your message:", key="user_input")
-        submit_button = st.form_submit_button("Send")
-        
-    if submit_button:
-        trigger_bot_thinking()
+    # ❌ Don't show form if bot is thinking
+    if not st.session_state.get("bot_thinking", False):
+        with st.form(key="input_form", clear_on_submit=True):
+            user_input = st.text_input("Type your message:", key="user_input")
+            submit_button = st.form_submit_button("Send")
+
+        if submit_button and user_input.strip():
+            trigger_bot_thinking(user_input)
+
+    # 🛠️ Check if bot is thinking and process response BEFORE displaying UI
+    if st.session_state.get("bot_thinking", False):
+        process_bot_response()
+        #return  # Prevents UI from rendering mid-processing
+
+def trigger_bot_thinking(user_input):
+    cookies["display_message_separator"] = "False"
+
+    # Append user message to the chat
+    st.session_state["messages"].append({"role": "user", "content": user_input})
+
+    # Display user message
+    with st.chat_message("user"):
+        st.markdown(user_input)
+
+    # Set bot_thinking to True & rerun
+    st.session_state["bot_thinking"] = True
+    st.rerun()
+
+def process_bot_response():
+    """Handles bot response automatically when bot_thinking is True."""
+    user_email = cookies.get("user_email")
+    user_input = st.session_state["messages"][-1]["content"]  # Last user message
+
+    with st.status("Thinking... 🤖", expanded=True) as status:
+        response = send_message(user_input, user_email)
+        #sleep(1)  
+
+        if response:
+            st.session_state["messages"].append({"role": "assistant", "content": response})
+            save_chat_history(user_email, user_input, response)
+
+            with st.chat_message("assistant"):
+                st.markdown(response)
+        else:
+            error_message = "🤖 Sorry, I didn't understand that."
+            st.session_state["messages"].append({"role": "assistant", "content": error_message})
+
+            with st.chat_message("assistant"):
+                st.markdown(error_message)
+
+        # ✅ Reset `bot_thinking` so input appears again
+        st.session_state["bot_thinking"] = False
+        #status.update(label="EngiBot is ready! ✅", state="complete")
+        st.rerun()
+
+def send_message(user_input, user_email):
+    url = "http://rasa:5005/webhooks/rest/webhook"
+    payload = {
+        "sender": user_email,
+        "message": user_input,
+        "metadata": {"user_email": user_email}
+    }
+    headers = {"Content-Type": "application/json"}
+
+    try:
+        response = requests.post(url, data=json.dumps(payload), headers=headers)
+        response.raise_for_status()
+        messages = response.json()
+
+        if messages:
+            bot_replies = [msg["text"] for msg in messages if "text" in msg]
+            bot_reply = "\n\n".join(bot_replies)
+            return bot_reply
+
+        return "🤖 Sorry, I didn't understand that."
+    except requests.RequestException as e:
+        st.error(f"⚠️ Error connecting to Rasa: {e}")
+        return None
 
 
 def set_student_insights(user_email):
@@ -323,7 +394,7 @@ def set_student_insights(user_email):
         topic_counts = df_filtered["topic"].value_counts().reset_index()
         topic_counts.columns = ["Topic", "Frequency"]
         top_topics = topic_counts.head(7)  # Limit to top 7 topics
-        st.bar_chart(topic_counts.set_index("Topic"))
+        st.bar_chart(top_topics.set_index("Topic"))
 
         # Reference Materials Usage
         st.subheader("📄 Reference Material Usage")
@@ -344,47 +415,6 @@ def set_student_insights(user_email):
         # Display Interaction History
         st.subheader("📝 Your Question History")
         st.dataframe(df_filtered[["date", "question", "pdfs"]].rename(columns={"date": "Date", "question": "Question", "pdfs": "Referenced PDFs"}))
-
-
-def trigger_bot_thinking():
-    cookies["display_message_separator"] = "False"
-
-    st.session_state["messages"].append({"role": "user", "content": st.session_state.user_input})
-
-    # Step 2: Process the response after UI refresh
-    response = send_message(st.session_state.user_input, cookies.get("user_email"))
-
-    if response:
-        st.session_state["messages"].append({"role": "assistant", "content": response})
-        save_chat_history(cookies.get("user_email"), st.session_state.user_input, response)
-
-    st.rerun()
-
-    
-
-def send_message(user_input, user_email):
-    url = "http://rasa:5005/webhooks/rest/webhook"
-    payload = {
-        "sender": user_email,
-        "message": user_input,
-        "metadata": {"user_email": user_email}
-    }
-    headers = {"Content-Type": "application/json"}
-
-    try:
-        response = requests.post(url, data=json.dumps(payload), headers=headers)
-        response.raise_for_status()
-        messages = response.json()
-
-        if messages:
-            bot_replies = [msg["text"] for msg in messages if "text" in msg]
-            bot_reply = "\n\n".join(bot_replies)
-            return bot_reply
-
-        return "🤖 Sorry, I didn't understand that."
-    except requests.RequestException as e:
-        st.error(f"⚠️ Error connecting to Rasa: {e}")
-        return None
 
 def save_chat_history(user_email, user_message, bot_response):
     conn = get_db_connection()
