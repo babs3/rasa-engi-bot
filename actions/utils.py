@@ -5,6 +5,11 @@ from difflib import get_close_matches
 import re
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from spacy.matcher import PhraseMatcher
+from spacy.tokens import DocBin
+from collections import Counter
+from itertools import islice
+import os
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -45,7 +50,19 @@ def save_student_progress(user_email, user_message, bot_response, tokens, pfds):
     cur.close()
     conn.close()
 
-# === STEP 1: MULTI-WORD EXPRESSION (MWE) EXTRACTION === #
+import json
+
+def load_generic_words():
+    """Load generic words from a saved file."""
+    global generic_words
+    try:
+        with open(os.path.join(os.path.dirname(__file__), "generic_words.json"), "r") as file:
+            generic_words = set(json.load(file))
+    except FileNotFoundError:
+        generic_words = set()
+    print(f"\n📗 Generic words loaded: {len(generic_words)} words")
+        
+load_generic_words()
 
 def extract_complex_tokens(query): # ['pestel analysis']
     """Extracts only meaningful subject keywords from a query."""
@@ -68,7 +85,11 @@ def extract_complex_tokens(query): # ['pestel analysis']
 
     # Remove duplicates while preserving order
     keywords = list(dict.fromkeys(keywords))
-    return keywords
+
+    # === Filter out generic words identified by TF-IDF ===
+    filtered_keywords = [kw for kw in keywords if kw.lower() not in generic_words]
+
+    return filtered_keywords
 
 
 def extract_key_expressions(text): # ['pestel', 'analysis', 'pestel analysis']
@@ -197,7 +218,6 @@ def is_common_word(word, threshold=0.00001):
     """
     freq = word_frequency(word, 'en')  # Get word frequency
     return freq > threshold  # If frequency is high, it's a common word
-
 
 
 def extract_simple_tokens(query): # ['pestel', 'analysis']

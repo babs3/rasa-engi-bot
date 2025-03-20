@@ -11,6 +11,7 @@ from typing import Any, Text, Dict, List
 from rasa_sdk.executor import CollectingDispatcher
 
 from .utils import *
+from .generic_words import *
 
 # Load sentence transformer model
 model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -272,9 +273,9 @@ class ActionGetClassMaterialLocation(Action):
             if len(document_entries) > len(selected_materials) * 3: # means that the tokenization went wrong
                 print("\n👻 --> Tokenization went wrong, using pdfs from slot")
                 location_results = selected_materials
-                save_student_progress(sender_id, query, bot_response, simple_tokens, ", ".join(pdfs))
+                save_student_progress(sender_id, query, bot_response, complex_tokens, ", ".join(pdfs))
             else:
-                save_student_progress(sender_id, query, bot_response, simple_tokens, ", ".join(pdfs_insights))
+                save_student_progress(sender_id, query, bot_response, complex_tokens, ", ".join(pdfs_insights))
 
             print("\n🎯 Material location for query found!")
             print("\n📌 FINAL SORTED RESULTS:")
