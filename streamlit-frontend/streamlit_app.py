@@ -322,6 +322,7 @@ def set_student_insights(user_email):
         df_filtered["topic"] = df_filtered["topic"].str.lower()
         topic_counts = df_filtered["topic"].value_counts().reset_index()
         topic_counts.columns = ["Topic", "Frequency"]
+        top_topics = topic_counts.head(7)  # Limit to top 7 topics
         st.bar_chart(topic_counts.set_index("Topic"))
 
         # Reference Materials Usage
