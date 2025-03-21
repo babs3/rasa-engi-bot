@@ -208,12 +208,13 @@ def set_teacher_insights(user_email):
     # Sidebar: Select class
     selected_class = st.sidebar.selectbox("Select a Class", df_classes["name"].unique())
 
-    # Filter selected class
-    #class_ids = df_classes[df_classes["name"] == selected_class]["id"].tolist()
+    # display available class numbers and let the teacher select one
+    st.sidebar.write("Class Numbers:")
+    class_numbers = df_classes[df_classes["name"] == selected_class]["number"].values
+    selected_class_number = st.sidebar.selectbox("Select a Class Number", class_numbers)
 
     # Fetch student progress for selected class
-    df = get_class_progress(selected_class)
-    st.info(df)
+    df = get_class_progress(selected_class, selected_class_number)
 
     if df.empty:
         st.info("No student interactions recorded.")

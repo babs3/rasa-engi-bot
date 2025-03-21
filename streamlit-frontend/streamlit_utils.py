@@ -277,15 +277,15 @@ def get_teacher_classes(teacher_email):
     return pd.DataFrame(classes, columns=["id", "course", "name", "number", "students"])
 
 # Function to fetch student progress for a teacher’s classes
-def get_class_progress(class_name):
-    if not class_name:
+def get_class_progress(class_name, class_number):
+    if not class_name or not class_number:
         return pd.DataFrame()
 
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
     
     # Get all students up_ids in the class (separated by commas)
-    cur.execute("SELECT students FROM classes WHERE name = %s", (class_name,))
+    cur.execute("SELECT students FROM classes WHERE name = %s and number = %s", (class_name,class_number))
     data = cur.fetchone()
     
     if not data or not data['students']:
