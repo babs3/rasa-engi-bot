@@ -1,5 +1,4 @@
 import streamlit as st
-
 st.set_page_config("Engi-bot", '🤖', layout="wide")
 
 from streamlit_scroll_to_top import scroll_to_here
@@ -27,7 +26,6 @@ def main():
             else: 
                 st.info("No insights available for teachers.")
 
-
         else:
             st.info("Please log in or register.")
 
@@ -40,7 +38,6 @@ def main():
     if "input_disabled" not in st.session_state:
         st.session_state.input_disabled = "False"
 
-        
     if cookies.get("logged_in") != "True":
         auth_tabs()
     else:
@@ -77,6 +74,17 @@ def chat_interface():
 
     # ❌ Don't show form if bot is thinking
     if not st.session_state.get("bot_thinking", False):
+        st.markdown(
+            """
+            <style>
+                div[data-testid="stForm"] {
+                    margin-bottom: max(-20vh, -6em) !important;  /* Reduce bottom spacing */
+                }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
         with st.form(key="input_form", clear_on_submit=True):
             user_input = st.text_input("Type your message:", key="user_input")
             submit_button = st.form_submit_button("Send")
@@ -87,7 +95,7 @@ def chat_interface():
     # 🛠️ Check if bot is thinking and process response BEFORE displaying UI
     if st.session_state.get("bot_thinking", False):
         process_bot_response()
-        #return  # Prevents UI from rendering mid-processing
+        return  # Prevents UI from rendering mid-processing
 
 def trigger_bot_thinking(user_input):
     cookies["display_message_separator"] = "False"
