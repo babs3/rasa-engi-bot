@@ -41,7 +41,7 @@ class MessageHistory(db.Model):
 
 class StudentProgress(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    student_up_id = db.Column(db.String(20), db.ForeignKey('users.up_id'), nullable=False)
     question = db.Column(db.Text, nullable=False)
     response = db.Column(db.Text, nullable=False)
     topic = db.Column(db.Text, nullable=True)
@@ -52,3 +52,23 @@ class StudentProgress(db.Model):
         self.student_id = student_id
         self.user_message = user_message
         self.bot_response = bot_response
+
+
+# Classes tables that will represent students and teachers enrolled in a specific class
+# it must have an id, course, name, number, a list of students, and a list of teachers
+# this class should represent real world data
+class Classes(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    course = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    number = db.Column(db.String(10), nullable=False)
+    students = db.Column(db.Text, nullable=True)  # Comma-separated values - up_ids
+    teachers = db.Column(db.Text, nullable=True)  # Comma-separated values - emails
+
+    def __init__(self, course, name, number, students=None, teachers=None):
+        self.course = course
+        self.name = name
+        self.number = number
+        self.students = ",".join(students) if students else None
+        self.teachers = ",".join(teachers) if teachers else None
+

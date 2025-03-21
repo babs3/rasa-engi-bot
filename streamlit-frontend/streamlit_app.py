@@ -23,8 +23,8 @@ def main():
             role = get_user_role(user_email)
             if role == "Student":
                 set_student_insights(user_email)
-            else: 
-                st.info("No insights available for teachers.")
+            else: # role == "Teacher"
+                set_teacher_insights(user_email)
 
         else:
             st.info("Please log in or register.")
@@ -136,7 +136,7 @@ def process_bot_response():
         # ✅ Reset `bot_thinking` so input appears again
         st.session_state["bot_thinking"] = False
         #status.update(label="EngiBot is ready! ✅", state="complete")
-        st.rerun()
+        st.rerun() # TODO - check if this is needed
 
 
 def set_student_insights(user_email):
@@ -194,6 +194,72 @@ def set_student_insights(user_email):
         # Display Interaction History
         st.subheader("📝 Your Question History")
         st.dataframe(df_filtered[["date", "question", "pdfs"]].rename(columns={"date": "Date", "question": "Question", "pdfs": "Referenced PDFs"}))
+
+def set_teacher_insights(user_email):
+    st.title("📊 Class Engagement Dashboard")
+
+    # Fetch teacher's classes
+    df_classes = get_teacher_classes(user_email)
+
+    if df_classes.empty:
+        st.info("No assigned classes found.")
+        return
+
+    # Sidebar: Select class
+    selected_class = st.sidebar.selectbox("Select a Class", df_classes["name"].unique())
+
+    # Filter selected class
+    #class_ids = df_classes[df_classes["name"] == selected_class]["id"].tolist()
+
+    # Fetch student progress for selected class
+    df = get_class_progress(selected_class)
+    st.info(df)
+
+    if df.empty:
+        st.info("No student interactions recorded.")
+        return
+
+    # Convert timestamp to datetime
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df["Date"] = df["timestamp"].dt.date
+
+    # Sidebar Filters
+    st.sidebar.header("📅 Filter Data")
+    start_date = st.sidebar.date_input("Start Date", min(df["Date"]))
+    end_date = st.sidebar.date_input("End Date", max(df["Date"]))
+
+    df_filtered = df[(df["Date"] >= start_date) & (df["Date"] <= end_date)]
+
+    # General Stats
+    st.subheader("📈 Overview")
+    col1, col2 = st.columns(2)
+    col1.metric("Total Questions", len(df_filtered))
+    col2.metric("Unique Students", df_filtered["student_up_id"].nunique())
+
+    # Topic Analysis
+    st.subheader("📚 Most Discussed Topics")
+    df_filtered["topic"] = df_filtered["topic"].str.lower()
+    topic_counts = df_filtered["topic"].value_counts().reset_index()
+    topic_counts.columns = ["topic", "Frequency"]
+    st.bar_chart(topic_counts.set_index("topic"))
+
+    # Reference Materials Usage
+    st.subheader("📄 Reference Material Usage")
+    df_filtered_pdfs = df_filtered[df_filtered["pdfs"].apply(lambda x: bool(x) and x != "{}")]
+    if not df_filtered_pdfs.empty:
+        pdf_counts = pd.Series(
+            [pdf.split(" (Pages")[0].strip() for pdf_list in df_filtered_pdfs["pdfs"].dropna() for pdf in pdf_list.split(",")]
+        ).value_counts().reset_index()
+        pdf_counts.columns = ["PDF Name", "Count"]
+        st.bar_chart(pdf_counts.set_index("PDF Name"))
+    else:
+        st.write("No reference materials used.")
+
+    # Engagement Over Time
+    st.subheader("📅 Engagement Over Time")
+    daily_counts = df_filtered.groupby("Date").size().reset_index(name="questions")
+    st.line_chart(daily_counts.set_index("Date"))
+
 
 
 if __name__ == "__main__":

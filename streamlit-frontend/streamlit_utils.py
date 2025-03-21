@@ -91,7 +91,7 @@ def get_student_progress(user_email):
     cur.execute("""
         SELECT question, response, topic, pdfs, timestamp
         FROM student_progress
-        WHERE student_id = (SELECT id FROM "users" WHERE email = %s)
+        WHERE student_up_id = (SELECT up_id FROM "users" WHERE email = %s)
         ORDER BY timestamp ASC;
     """, (user_email,))
     data = cur.fetchall()
@@ -263,3 +263,56 @@ def save_chat_history(user_email, user_message, bot_response):
     
     cur.close()
     conn.close()
+
+# Function to fetch teacher's classes
+def get_teacher_classes(teacher_email):
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("""
+        SELECT id, course, name, number, students FROM classes WHERE teachers LIKE %s;
+    """, (f"%{teacher_email}%",))
+    classes = cur.fetchall()
+    conn.close()
+
+    return pd.DataFrame(classes, columns=["id", "course", "name", "number", "students"])
+
+# Function to fetch student progress for a teacher’s classes
+def get_class_progress(class_name):
+    if not class_name:
+        return pd.DataFrame()
+
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    # Get all students up_ids in the class (separated by commas)
+    cur.execute("SELECT students FROM classes WHERE name = %s", (class_name,))
+    data = cur.fetchone()
+    
+    if not data or not data['students']:
+        cur.close()
+        conn.close()
+        return pd.DataFrame()
+
+    students = data['students'].split(",")
+
+    # Get all student progress for each student in the class
+    data = []
+    for student in students:
+        cur.execute("""
+            SELECT student_up_id, question, response, topic, pdfs, timestamp
+            FROM student_progress
+            WHERE student_up_id = %s
+            ORDER BY timestamp ASC;
+        """, (student,))
+        student_data = cur.fetchall()
+        if student_data:
+            data += student_data
+
+    cur.close()
+    conn.close()
+
+    if not data:
+        st.info(f"No progress data found for students in class: {class_name}")
+        return pd.DataFrame()
+
+    return pd.DataFrame(data, columns=["student_up_id", "question", "response", "topic", "pdfs", "timestamp"])
