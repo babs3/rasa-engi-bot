@@ -76,25 +76,55 @@ def chat_interface():
             st.session_state.scroll_down = False  # Reset the scroll state
 
     if user_role == "Teacher":
-        response = ""
         buttons = []
-        if not st.session_state.get("bot_thinking", False):
+
+        # Fetch available classes - columns=["id", "course", "name", "number", "students"])
+        # available classes name and number like GEE 101, GEE 102, etc.
+        df_classes = get_teacher_classes(cookies.get("user_email"))
+
+        if df_classes.empty:
+            st.info("No assigned classes found.")
+            return
+
+        # Create a unique identifier for each class by concatenating name and number
+        df_classes["class_identifier"] = df_classes["name"] + "-" + df_classes["number"]
+        # get all the unique class names to a list
+        class_names = df_classes["name"].unique()
+        # add all possible classes names to the class_identifier column
+        for class_name in class_names:
+            new_row = pd.DataFrame({"class_identifier": [class_name + "-All"], "name": [class_name], "number": ["-1"]})
+            df_classes = pd.concat([df_classes, new_row], ignore_index=True)
+        # Add an "all" class to the list
+        all_class_row = pd.DataFrame({"class_identifier": ["All"], "name": ["All"], "number": ["-1"]})
+        df_classes = pd.concat([df_classes, all_class_row], ignore_index=True)
+
+        # Sidebar: Select class
+        selected_class_identifier = st.selectbox("📚 Select a Class", df_classes["class_identifier"].unique(), key="selected_class")
+        st.session_state["class_identifier"] = selected_class_identifier
+
+        # Display insight buttons only if a class is selected
+        if selected_class_identifier:
+
+            # Extract the selected class name and number
+            selected_class_row = df_classes[df_classes["class_identifier"] == selected_class_identifier].iloc[0]
+            selected_class_name = selected_class_row["name"]
+            selected_class_number = selected_class_row["number"]
 
             # Populate buttons for insights
-            if not st.session_state.get("teacher_message_sent", False):
-                response, buttons = send_message("buttons for insights", cookies.get("user_email"))
+            if not st.session_state.get("buttons", False):
+                _, buttons = send_message("buttons for insights", cookies.get("user_email"))
                 st.session_state["buttons"] = buttons
-                st.session_state["teacher_message_sent"] = True
 
-            # Display buttons for insights
+            # Display buttons
             if st.session_state.get("buttons"):
                 buttons = st.session_state["buttons"]
                 # save buttons in session state
                 cols = st.columns(len(buttons))
                 for i, btn in enumerate(buttons):
                     if cols[i].button(btn["title"]):
-                        st.session_state["user_input"] = btn["payload"]
-                        process_teacher_bot_response(st.session_state["user_input"])
+                        #st.session_state["user_input"] = btn["payload"]
+                        #process_teacher_bot_response(st.session_state["user_input"])
+                        process_teacher_bot_response(btn["payload"], selected_class_name, selected_class_number)
                         return
                 
     else:
@@ -148,9 +178,9 @@ def trigger_bot_thinking(user_input):
     st.session_state["bot_thinking"] = True
     st.rerun()
 
-def process_teacher_bot_response(user_input):
+def process_teacher_bot_response(btn_payload, selected_class_name=None, selected_class_number=None):
     user_email = cookies.get("user_email")
-    response, btns = send_message(user_input, user_email)
+    response, _ = send_message(btn_payload, user_email, selected_class_name, selected_class_number)
 
     if response:
         st.session_state["messages"].append({"role": "assistant", "content": response})
@@ -227,19 +257,28 @@ def set_student_insights(user_email):
 
         # Reference Materials Usage
         st.subheader("📄 Reference Material Usage")
-        # Filter out rows where pdfs is an empty list or NaN
+        # drop empty pdfs
         df_filtered_pdfs = df_filtered[df_filtered["pdfs"].apply(lambda x: bool(x) and x != "{}")]
         if not df_filtered_pdfs.empty:
-            pdf_counts = pd.Series(
-                [pdf.split(" (Pages")[0].strip() for pdf_list in df_filtered_pdfs["pdfs"].dropna() for pdf in pdf_list.split(",")]
-            ).value_counts().reset_index()
+            pdf_list = []
+            for pdfs in df_filtered_pdfs["pdfs"].dropna():
+                for pdf in pdfs.split(","):
+                    pdf_list.append(pdf.split(" (Pages")[0].strip())
+            #st.info(pdf_list)
+
+            # count the frequency of each pdf
+            pdf_counts = pd.Series(pdf_list).value_counts().reset_index()
             pdf_counts.columns = ["PDF Name", "Count"]
+
             # order by count
             pdf_counts = pdf_counts.sort_values(by="Count", ascending=False) 
+            #st.info(pdf_counts)
             # show only top 5 pdfs
-            pdf_counts = pdf_counts.head(5)
+            top_pdfs = pdf_counts.head(5)
+            #st.info(top_pdfs)
+
             # display bar chart
-            st.bar_chart(pdf_counts.set_index("PDF Name"))
+            st.bar_chart(top_pdfs.set_index("PDF Name"))
         else:
             st.write("No reference materials used.")
 
@@ -326,7 +365,7 @@ def set_teacher_insights(user_email):
         #st.info(top_pdfs)
 
         # display bar chart
-        st.bar_chart(pdf_counts.set_index("PDF Name"))
+        st.bar_chart(top_pdfs.set_index("PDF Name"))
     else:
         st.write("No reference materials used.")
 

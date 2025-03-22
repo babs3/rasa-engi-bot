@@ -222,12 +222,12 @@ def display_message_separator():
         unsafe_allow_html=True
     )
 
-def send_message(user_input, user_email):
+def send_message(user_input, user_email, selected_class_name=None, selected_class_number=None):
     url = "http://rasa:5005/webhooks/rest/webhook"
     payload = {
         "sender": user_email,
         "message": user_input,
-        "metadata": {"user_email": user_email}
+        "metadata": {"selected_class": selected_class_name, "selected_number": selected_class_number}
     }
     headers = {"Content-Type": "application/json"}
 
