@@ -353,9 +353,11 @@ class ActionGetMostPopularTopics(Action):
 
         df["topic"] = df["topic"].str.lower()
         topic_counts = df["topic"].value_counts().reset_index()
+        topic_counts.columns = ["topic", "Frequency"]
+        # sort by frequency
+        topic_counts = topic_counts.sort_values(by="Frequency", ascending=False)
         # get the top 5 topics
         top_topics = topic_counts.head(5)
-        top_topics.columns = ["topic", "Frequency"]
         topics_name = top_topics["topic"].tolist()
         # create a string with the topics to be displayed
         topics_name_string = "\n\n".join([f"📄 {topic} ({top_topics[top_topics['topic'] == topic]['Frequency'].values[0]} references)" for topic in topics_name])
@@ -376,17 +378,28 @@ class ActionGetMostReferencedPDFs(Action):
         teacher_email = tracker.sender_id
         
         df = get_overall_students_progress(teacher_email)
-        df["pdfs"] = df["pdfs"].str.lower()
-        pdf_counts = df["pdfs"].value_counts().reset_index()
-        # get the top 5 pdfs
-        top_pdfs = pdf_counts.head(5)
-        top_pdfs.columns = ["PDF", "Frequency"]
-        pdf_name = [pdf.split(", ") for pdf in top_pdfs["PDF"].tolist()]
-        # create a string with the pdf names to be displayed
-        pdf_name_string = "\n\n".join([f"📄 {pdf[0]} ({len(pdf)} references)" for pdf in pdf_name])
 
-        if not top_pdfs.empty:
+        df = df[df["pdfs"].apply(lambda x: bool(x) and x != "{}")]
+        if not df.empty:
+            pdf_list = []
+            for pdfs in df["pdfs"].dropna():
+                for pdf in pdfs.split(","):
+                    pdf_list.append(pdf.split(" (Pages")[0].strip())
+
+            pdf_counts = pd.Series(pdf_list).value_counts().reset_index()
+            pdf_counts.columns = ["PDF Name", "Count"]
+
+            # order by count
+            pdf_counts = pdf_counts.sort_values(by="Count", ascending=False) 
+            # show only top 5 pdfs
+            top_pdfs = pdf_counts.head(5)
+
+            # create a string with the pdf names to be displayed
+            pdf_name = [pdf.split(", ") for pdf in top_pdfs["PDF Name"].tolist()]
+            pdf_name_string = "\n\n".join([f"📄 {pdf[0]} ({len(pdf)} references)" for pdf in pdf_name])
+
             dispatcher.utter_message(text=f"📊 Most referenced PDFs are:\n\n{pdf_name_string}")
+
         else:
             dispatcher.utter_message(text="I couldn't find any referenced PDFs.")
 

@@ -70,10 +70,10 @@ def chat_interface():
         if cookies.get("display_message_separator") == "True":
             display_message_separator()      
 
-    # Handle scrolling to the bottom
-    if st.session_state.scroll_down:
-        scroll_to_here(0, key='bottom')  # Smooth scroll to the bottom of the page
-        st.session_state.scroll_down = False  # Reset the scroll state
+        # Handle scrolling to the bottom
+        if st.session_state.scroll_down:
+            scroll_to_here(0, key='bottom')  # Smooth scroll to the bottom of the page
+            st.session_state.scroll_down = False  # Reset the scroll state
 
     if user_role == "Teacher":
         response = ""
@@ -85,7 +85,7 @@ def chat_interface():
                 response, buttons = send_message("buttons for insights", cookies.get("user_email"))
                 st.session_state["buttons"] = buttons
                 st.session_state["teacher_message_sent"] = True
-            
+
             # Display buttons for insights
             if st.session_state.get("buttons"):
                 buttons = st.session_state["buttons"]
@@ -137,13 +137,12 @@ def trigger_bot_thinking(user_input):
     cookies["display_message_separator"] = "False"
 
     user_role = get_user_role(cookies.get("user_email"))
-    if user_role == "Student":
-        # Append user message to the chat
-        st.session_state["messages"].append({"role": "user", "content": user_input})
+    # Append user message to the chat
+    st.session_state["messages"].append({"role": "user", "content": user_input})
 
-        # Display user message
-        with st.chat_message("user"):
-            st.markdown(user_input)
+    # Display user message
+    with st.chat_message("user"):
+        st.markdown(user_input)
 
     # Set bot_thinking to True & rerun
     st.session_state["bot_thinking"] = True
@@ -166,21 +165,18 @@ def process_teacher_bot_response(user_input):
 
     st.session_state["teacher_message_sent"] = False  # Allow re-triggering
     # ✅ Reset `bot_thinking` so input appears again
-    st.session_state["bot_thinking"] = False
-    st.rerun() # TODO - check if this is needed
+    st.rerun()
 
 def process_bot_response(user_input):
     """Handles bot response automatically when bot_thinking is True."""
     user_email = cookies.get("user_email")
-    user_role = get_user_role(user_email)
 
     with st.status("Thinking... 🤖", expanded=True) as status:
         response, btns = send_message(user_input, user_email)
 
         if response:
             st.session_state["messages"].append({"role": "assistant", "content": response})
-            if user_role == "Student":
-                save_chat_history(user_email, user_input, response)
+            save_chat_history(user_email, user_input, response)
 
             with st.chat_message("assistant"):
                 st.markdown(response)
@@ -191,11 +187,9 @@ def process_bot_response(user_input):
             with st.chat_message("assistant"):
                 st.markdown(error_message)
 
-        st.session_state["teacher_message_sent"] = False  # Allow re-triggering
         # ✅ Reset `bot_thinking` so input appears again
         st.session_state["bot_thinking"] = False
-        st.rerun() # TODO - check if this is needed
-
+        st.rerun()
 
 def set_student_insights(user_email):
     # UI Layout
@@ -240,6 +234,11 @@ def set_student_insights(user_email):
                 [pdf.split(" (Pages")[0].strip() for pdf_list in df_filtered_pdfs["pdfs"].dropna() for pdf in pdf_list.split(",")]
             ).value_counts().reset_index()
             pdf_counts.columns = ["PDF Name", "Count"]
+            # order by count
+            pdf_counts = pdf_counts.sort_values(by="Count", ascending=False) 
+            # show only top 5 pdfs
+            pdf_counts = pdf_counts.head(5)
+            # display bar chart
             st.bar_chart(pdf_counts.set_index("PDF Name"))
         else:
             st.write("No reference materials used.")
@@ -306,12 +305,27 @@ def set_teacher_insights(user_email):
 
     # Reference Materials Usage
     st.subheader("📄 Reference Material Usage")
+    # drop empty pdfs
     df_filtered_pdfs = df_filtered[df_filtered["pdfs"].apply(lambda x: bool(x) and x != "{}")]
     if not df_filtered_pdfs.empty:
-        pdf_counts = pd.Series(
-            [pdf.split(" (Pages")[0].strip() for pdf_list in df_filtered_pdfs["pdfs"].dropna() for pdf in pdf_list.split(",")]
-        ).value_counts().reset_index()
+        pdf_list = []
+        for pdfs in df_filtered_pdfs["pdfs"].dropna():
+            for pdf in pdfs.split(","):
+                pdf_list.append(pdf.split(" (Pages")[0].strip())
+        #st.info(pdf_list)
+
+        # count the frequency of each pdf
+        pdf_counts = pd.Series(pdf_list).value_counts().reset_index()
         pdf_counts.columns = ["PDF Name", "Count"]
+
+        # order by count
+        pdf_counts = pdf_counts.sort_values(by="Count", ascending=False) 
+        #st.info(pdf_counts)
+        # show only top 5 pdfs
+        top_pdfs = pdf_counts.head(5)
+        #st.info(top_pdfs)
+
+        # display bar chart
         st.bar_chart(pdf_counts.set_index("PDF Name"))
     else:
         st.write("No reference materials used.")
