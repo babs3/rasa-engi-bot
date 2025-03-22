@@ -337,10 +337,15 @@ class ActionGetTotalQuestions(Action):
         selected_class_number = tracker.latest_message.get("metadata", {}).get("selected_class_number")
 
         print(f"Selected class: {selected_class_name}-{selected_class_number}")
+
+        if selected_class_number == "-1":
+            selected_class_number = None
+        if selected_class_name == "All":
+            selected_class_name = None
+            selected_class_number = None
+
         
-        df = get_overall_students_progress(teacher_email)
-        if selected_class_name and selected_class_number:
-            df = df[(df["class_name"] == selected_class_name) & (df["class_number"] == selected_class_number)]
+        df = get_overall_students_progress(teacher_email, selected_class_name, selected_class_number)
         result = df.shape[0]
         
         dispatcher.utter_message(text=f"📊 Students have asked **{result}** questions in total.")

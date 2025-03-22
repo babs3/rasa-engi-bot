@@ -9,6 +9,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
 import json
+import pandas as pd
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -329,15 +330,21 @@ def correct_query_tokens(tokens, set):
     """Corrects a list of tokens for spelling mistakes."""
     return [correct_spelling(token, set) for token in tokens]
 
-import pandas as pd
-
-def get_overall_students_progress(teacher_email):
+def get_overall_students_progress(teacher_email, class_name=None, class_number=None):
 
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    if class_name and class_number:
+        print("--- INSIDE 1 ---")
+        cur.execute("SELECT students FROM classes WHERE teachers LIKE %s AND name LIKE %s AND number LIKE %s", (teacher_email, class_name, class_number))
+    elif class_name:
+        print("--- INSIDE 2 ---")
+        cur.execute("SELECT students FROM classes WHERE teachers LIKE %s AND name LIKE %s", (teacher_email, class_name))
+    else: # Get all students up_ids whose teacher is the current user
+        print("--- INSIDE 3 ---")
+        cur.execute("SELECT students FROM classes WHERE teachers LIKE %s", (teacher_email,))
     
-    # Get all students up_ids whose teacher is the current user
-    cur.execute("SELECT students FROM classes WHERE teachers LIKE %s", (teacher_email,))
     data = cur.fetchone()
     
     if not data or not data['students']:

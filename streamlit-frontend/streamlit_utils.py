@@ -227,7 +227,7 @@ def send_message(user_input, user_email, selected_class_name=None, selected_clas
     payload = {
         "sender": user_email,
         "message": user_input,
-        "metadata": {"selected_class": selected_class_name, "selected_number": selected_class_number}
+        "metadata": {"selected_class_name": selected_class_name, "selected_class_number": selected_class_number}
     }
     headers = {"Content-Type": "application/json"}
 
