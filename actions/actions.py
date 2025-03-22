@@ -7,6 +7,7 @@ from rasa_sdk import Action, Tracker
 from sentence_transformers import SentenceTransformer
 import os
 from rasa_sdk.events import SlotSet
+from sqlalchemy import create_engine, text
 from .utils import *
 
 # Load sentence transformer model
@@ -323,3 +324,70 @@ class ActionGetClassMaterialLocation(Action):
 
         #clear the slots
         return [SlotSet("materials_location", []), SlotSet("bot_response", []), SlotSet("sender_id", ""), SlotSet("pdfs", []), SlotSet("user_query", "")]
+
+
+class ActionGetTotalQuestions(Action):
+    def name(self):
+        return "action_get_total_questions"
+
+    def run(self, dispatcher, tracker, domain):
+        print("\n📊 Getting total questions asked by students...")
+        teacher_email = tracker.sender_id
+        
+        df = get_overall_students_progress(teacher_email)
+        result = df.shape[0]
+        
+        dispatcher.utter_message(text=f"📊 Students have asked **{result}** questions in total.")
+        return []
+    
+
+class ActionGetMostPopularTopics(Action):
+    def name(self):
+        return "action_get_most_popular_topics"
+
+    def run(self, dispatcher, tracker, domain):
+        print("\n📊 Getting most popular topics...")
+        teacher_email = tracker.sender_id
+        
+        df = get_overall_students_progress(teacher_email)
+
+        df["topic"] = df["topic"].str.lower()
+        topic_counts = df["topic"].value_counts().reset_index()
+        # get the top 5 topics
+        top_topics = topic_counts.head(5)
+        top_topics.columns = ["topic", "Frequency"]
+        topics_name = top_topics["topic"].tolist()
+        # create a string with the topics to be displayed
+        topics_name_string = "\n\n".join([f"📄 {topic} ({top_topics[top_topics['topic'] == topic]['Frequency'].values[0]} references)" for topic in topics_name])
+
+        if not top_topics.empty:
+            dispatcher.utter_message(text=f"📊 Most referenced PDFs are:\n\n{topics_name_string}")
+        else:
+            dispatcher.utter_message(text="I couldn't find any popular topics.")
+
+        return []
+    
+class ActionGetMostReferencedPDFs(Action):
+    def name(self):
+        return "action_get_most_referenced_pdfs"
+
+    def run(self, dispatcher, tracker, domain):
+        print("\n📊 Getting most referenced PDFs...")
+        teacher_email = tracker.sender_id
+        
+        df = get_overall_students_progress(teacher_email)
+        df["pdfs"] = df["pdfs"].str.lower()
+        pdf_counts = df["pdfs"].value_counts().reset_index()
+        # get the top 5 pdfs
+        top_pdfs = pdf_counts.head(5)
+        top_pdfs.columns = ["PDF", "Frequency"]
+        pdf_name = [pdf.split(", ") for pdf in top_pdfs["PDF"].tolist()]
+        # create a string with the pdf names to be displayed
+        pdf_name_string = "\n\n".join([f"📄 {pdf[0]} ({len(pdf)} references)" for pdf in pdf_name])
+
+        if not top_pdfs.empty:
+            dispatcher.utter_message(text=f"📊 Most referenced PDFs are:\n\n{pdf_name_string}")
+        else:
+            dispatcher.utter_message(text="I couldn't find any referenced PDFs.")
+
+        return []

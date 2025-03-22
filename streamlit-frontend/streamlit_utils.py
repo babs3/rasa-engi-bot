@@ -236,12 +236,17 @@ def send_message(user_input, user_email):
         response.raise_for_status()
         messages = response.json()
 
-        if messages:
-            bot_replies = [msg["text"] for msg in messages if "text" in msg]
-            bot_reply = "\n\n".join(bot_replies)
-            return bot_reply
+        bot_reply = ""
+        buttons = []
 
-        return "🤖 Sorry, I didn't understand that."
+        for message in messages:
+            if "text" in message:
+                bot_reply += f"\n\n {message['text']}"
+            if "buttons" in message:
+                buttons = message["buttons"]
+
+        return bot_reply.strip(), buttons  # Return both text and buttons
+
     except requests.RequestException as e:
         st.error(f"⚠️ Error connecting to Rasa: {e}")
         return None

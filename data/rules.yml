@@ -17,3 +17,23 @@ rules:
     - intent: ask_clarification
     - action: action_fetch_class_material
     - action: action_get_class_material_location
+
+- rule: Handle insights request
+  steps:
+    - intent: get_insights
+    - action: utter_get_insights
+
+- rule: Show most popular topics
+  steps:
+    - intent: most_popular_topics
+    - action: action_get_most_popular_topics
+
+- rule: Show total number of questions
+  steps:
+    - intent: total_questions
+    - action: action_get_total_questions
+
+- rule: Show most referenced PDFs
+  steps:
+    - intent: most_referenced_pdfs
+    - action: action_get_most_referenced_pdfs

@@ -328,3 +328,42 @@ def correct_spelling(word, set=VALID_SIMPLE_WORDS): # TODO: check if no need to 
 def correct_query_tokens(tokens, set):
     """Corrects a list of tokens for spelling mistakes."""
     return [correct_spelling(token, set) for token in tokens]
+
+import pandas as pd
+
+def get_overall_students_progress(teacher_email):
+
+    conn = get_db_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    
+    # Get all students up_ids whose teacher is the current user
+    cur.execute("SELECT students FROM classes WHERE teachers LIKE %s", (teacher_email,))
+    data = cur.fetchone()
+    
+    if not data or not data['students']:
+        cur.close()
+        conn.close()
+        return pd.DataFrame()
+
+    students = data['students'].split(",")
+
+    # Get all student progress for each student
+    data = []
+    for student in students:
+        cur.execute("""
+            SELECT student_up_id, question, response, topic, pdfs, timestamp
+            FROM student_progress
+            WHERE student_up_id = %s
+            ORDER BY timestamp ASC;
+        """, (student,))
+        student_data = cur.fetchall()
+        if student_data:
+            data += student_data
+
+    cur.close()
+    conn.close()
+
+    if not data:
+        return pd.DataFrame()
+
+    return pd.DataFrame(data, columns=["student_up_id", "question", "response", "topic", "pdfs", "timestamp"])

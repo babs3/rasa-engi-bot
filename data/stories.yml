@@ -29,3 +29,18 @@ stories:
   - intent: deny
   - action: utter_goodbye
   
+
+- story: Show most popular topics
+  steps:
+    - intent: most_popular_topics
+    - action: action_get_most_popular_topics
+
+- story: Show total number of questions
+  steps:
+    - intent: total_questions
+    - action: action_get_total_questions
+
+- story: Show most referenced PDFs
+  steps:
+    - intent: most_referenced_pdfs
+    - action: action_get_most_referenced_pdfs

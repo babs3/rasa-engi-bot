@@ -9,6 +9,10 @@ intents:
   - mood_unhappy
   - bot_challenge
   - ask_clarification
+  - get_insights
+  - most_popular_topics
+  - total_questions
+  - most_referenced_pdfs
 
 slots:
   user_query:
@@ -66,12 +70,30 @@ responses:
   - text: "Hi! I specialize in assisting with course-related questions. Do you need help with something specific?"
   - text: "Hello! Let's keep the focus on learning. What topic do you need assistance with?"
   - text: "Hi there! I'm here to assist with your learning! How can I help?"
+
+  utter_get_insights:
+  - text: "Hey! How are you?"
+    buttons:
+    - title: "Get most popular topics"
+      payload: "/most_popular_topics"
+    - title: "Get total questions"
+      payload: "/total_questions"
+    - title: "Get most referenced PDFs"
+      payload: "/most_referenced_pdfs"
+
+  utter_get_most_popular_topics:
+  - text: "The most popular topics are:"
+
+  utter_get_total_questions:
+  - text: "The total number of questions is:"
   
 
 actions:
-- action_extract_metadata
 - action_fetch_class_material
 - action_get_class_material_location
+- action_get_most_popular_topics
+- action_get_total_questions
+- action_get_most_referenced_pdfs
 
 session_config:
   session_expiration_time: 60
