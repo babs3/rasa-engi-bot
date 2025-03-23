@@ -442,7 +442,7 @@ class ActionTeacherCustomQuestion(Action):
     def run(self, dispatcher, tracker, domain):
         print("\n📊 Generating bot response...")
         teacher_email = tracker.sender_id
-        teacher_question = tracker.latest_message.get("text")
+        teacher_question = tracker.latest_message.get("metadata", {}).get("teacher_question")
         selected_class_name = tracker.latest_message.get("metadata", {}).get("selected_class_name")
         selected_class_number = tracker.latest_message.get("metadata", {}).get("selected_class_number")
 
@@ -460,7 +460,7 @@ class ActionTeacherCustomQuestion(Action):
         # remove response column
         df = df.drop(columns=["student_up_id","response"])
 
-        prompt = f"Given the dataframe below that gathers students data about students questions of the right class, with the columns ['question', 'topic', 'pdfs', 'timestamp'], formulate an answer to the following teacher question: '{teacher_question}'. \n{df.to_string()}"
+        prompt = f"The information below summarises the questions asked by students. Given this, formulate an answer taking into account the teacher's question: '{teacher_question}'. \n{df.to_string()}"
         formatted_response = "Sorry, I couldn't generate a response..."
         try:
             g_model = genai.GenerativeModel("gemini-1.5-pro-latest")

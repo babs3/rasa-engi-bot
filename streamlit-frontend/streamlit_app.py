@@ -38,6 +38,9 @@ def main():
     if "input_disabled" not in st.session_state:
         st.session_state.input_disabled = "False"
 
+    if "messages" not in st.session_state:
+        st.session_state["messages"] = []
+
     if cookies.get("logged_in") != "True":
         auth_tabs()
     else:
@@ -78,80 +81,89 @@ def chat_interface():
     if user_role == "Teacher":
         buttons = []
 
-        if not st.session_state.get("bot_thinking", False):
-
-            if st.session_state.get("selected_button_payload") == "/custom_teacher_query":
-                # add an input form to get the custom query from the teacher
-                with st.form(key="custom_query_form", clear_on_submit=True):
-                    custom_teacher_query = st.text_input("Type your question:", key="custom_teacher_query")
-                    submit_button = st.form_submit_button("Send")
-                if submit_button and custom_teacher_query.strip():
-                    st.info("triggering bot thinking...")
-                    sleep(2)
-                    trigger_bot_thinking(custom_teacher_query)
-                    st.rerun()
-
-            # Fetch available classes - columns=["id", "course", "name", "number", "students"])
-            # available classes name and number like GEE 101, GEE 102, etc.
-            df_classes = get_teacher_classes(cookies.get("user_email"))
-
-            if df_classes.empty:
-                st.info("No assigned classes found.")
-                return
-
-            # Create a unique identifier for each class by concatenating name and number
-            df_classes["class_identifier"] = df_classes["name"] + "-" + df_classes["number"]
-            # get all the unique class names to a list
-            class_names = df_classes["name"].unique()
-            # add all possible classes names to the class_identifier column
-            for class_name in class_names:
-                new_row = pd.DataFrame({"class_identifier": [class_name + "-All"], "name": [class_name], "number": ["-1"]})
-                df_classes = pd.concat([df_classes, new_row], ignore_index=True)
-            # Add an "all" class to the list
-            all_class_row = pd.DataFrame({"class_identifier": ["All"], "name": ["All"], "number": ["-1"]})
-            df_classes = pd.concat([df_classes, all_class_row], ignore_index=True)
-
-            # Sidebar: Select class
-            selected_class_identifier = st.selectbox("📚 Select a Class", df_classes["class_identifier"].unique(), key="selected_class")
-            st.session_state["class_identifier"] = selected_class_identifier
-
-            # Display insight buttons only if a class is selected
-            if selected_class_identifier:
-
-                # Extract the selected class name and number
-                selected_class_row = df_classes[df_classes["class_identifier"] == selected_class_identifier].iloc[0]
-                selected_class_name = selected_class_row["name"]
-                selected_class_number = selected_class_row["number"]
-
-                # Populate buttons for insights
-                if not st.session_state.get("buttons", False):
-                    response, buttons = send_message("buttons for insights", cookies.get("user_email"))
-                    st.session_state["buttons"] = buttons
-
-                # Display buttons
-                if st.session_state.get("buttons"):
-                    buttons = st.session_state["buttons"]
-                    # save buttons in session state
-                    cols = st.columns(len(buttons))
-                    for i, btn in enumerate(buttons):
-                        if cols[i].button(btn["title"]):
-                            # save the selected button payload in session state
-                            st.session_state["selected_button_payload"] = btn["payload"]
-                            # save the selected class name and number in session state
-                            st.session_state["selected_class_name"] = selected_class_name
-                            st.session_state["selected_class_number"] = selected_class_number
-
-                            if btn["payload"] != "/custom_teacher_query":
-                                process_teacher_bot_response(btn["payload"], selected_class_name, selected_class_number)
-                            else:
-                                st.info("🚧 Custom queries are under construction.")
-                                st.rerun()
-                            return
-        
-        # 🛠️ Check if bot is thinking and process response BEFORE displaying UI
-        elif st.session_state.get("bot_thinking", False):
+        if st.session_state.get("bot_thinking", False):
             process_teacher_bot_response(st.session_state["selected_button_payload"], st.session_state["selected_class_name"], st.session_state["selected_class_number"])
-            return  # Prevents UI from rendering mid-processing
+            return
+        else:
+            if not st.session_state.get("bot_thinking", False):
+                df_classes = get_teacher_classes(cookies.get("user_email"))
+
+                if df_classes.empty:
+                    st.info("No assigned classes found.")
+                    return
+
+                # Create a unique identifier for each class by concatenating name and number
+                df_classes["class_identifier"] = df_classes["name"] + "-" + df_classes["number"]
+                # get all the unique class names to a list
+                class_names = df_classes["name"].unique()
+                # add all possible classes names to the class_identifier column
+                for class_name in class_names:
+                    new_row = pd.DataFrame({"class_identifier": [class_name + "-All"], "name": [class_name], "number": ["-1"]})
+                    df_classes = pd.concat([df_classes, new_row], ignore_index=True)
+                # Add an "all" class to the list
+                all_class_row = pd.DataFrame({"class_identifier": ["All"], "name": ["All"], "number": ["-1"]})
+                df_classes = pd.concat([df_classes, all_class_row], ignore_index=True)
+
+                # Sidebar: Select class
+                selected_class_identifier = st.selectbox("📚 Select a Class", df_classes["class_identifier"].unique(), key="selected_class")
+                st.session_state["class_identifier"] = selected_class_identifier
+
+                # Display insight buttons only if a class is selected
+                if selected_class_identifier:
+
+                    # Extract the selected class name and number
+                    selected_class_row = df_classes[df_classes["class_identifier"] == selected_class_identifier].iloc[0]
+                    selected_class_name = selected_class_row["name"]
+                    selected_class_number = selected_class_row["number"]
+
+                    # Populate buttons for insights
+                    if not st.session_state.get("buttons", False):
+                        response, buttons = send_message("buttons for insights", cookies.get("user_email"))
+                        st.session_state["buttons"] = buttons
+
+                    # Display buttons
+                    if st.session_state.get("buttons"):
+                        buttons = st.session_state["buttons"]
+                        # save buttons in session state
+                        cols = st.columns(len(buttons))
+                        for i, btn in enumerate(buttons):
+                            if cols[i].button(btn["title"]):
+                                # save the selected button payload in session state
+                                st.session_state["selected_button_payload"] = btn["payload"]
+                                # save the selected class name and number in session state
+                                st.session_state["selected_class_name"] = selected_class_name
+                                st.session_state["selected_class_number"] = selected_class_number
+
+                                if btn["payload"] != "/custom_teacher_query":
+                                    process_teacher_bot_response(btn["payload"], selected_class_name, selected_class_number)
+                                    return
+        
+
+        if st.session_state.get("selected_button_payload") == "/custom_teacher_query" and not st.session_state.get("bot_thinking"):
+
+            # display only last message and the message before that if its from the user
+            if st.session_state["messages"]:
+                if len(st.session_state["messages"]) > 1:
+                    if st.session_state["messages"][-2]["role"] == "user":
+                        with st.chat_message(st.session_state["messages"][-2]["role"]):
+                            st.markdown(st.session_state["messages"][-2]["content"])
+                        with st.chat_message(st.session_state["messages"][-1]["role"]):
+                            st.markdown(st.session_state["messages"][-1]["content"])
+                    
+            # add an input form to get the custom query from the teacher
+            with st.form(key="custom_query_form", clear_on_submit=True):
+                custom_teacher_query = st.text_input("Type your question:", key="custom_teacher_query")
+                submit_button = st.form_submit_button("Send")
+            if submit_button and custom_teacher_query.strip():
+                # Append user message to the chat
+                st.session_state["messages"].append({"role": "user", "content": custom_teacher_query})
+                # Set bot_thinking to True & rerun
+                st.session_state["bot_thinking"] = True
+                st.rerun()
+        else: 
+            if st.session_state["messages"]:
+                with st.chat_message(st.session_state["messages"][-1]["role"]):
+                    st.markdown(st.session_state["messages"][-1]["content"])
                             
     else:
         # ❌ Don't show form if bot is thinking
@@ -179,24 +191,10 @@ def chat_interface():
         if st.session_state.get("bot_thinking", False):
             process_bot_response(st.session_state["messages"][-1]["content"])
             return  # Prevents UI from rendering mid-processing
-        
-    if user_role == "Teacher":
-        if "messages" not in st.session_state:
-            st.session_state["messages"] = []
-
-        # display only last message and the message before that if its from the user
-        if st.session_state["messages"]:
-            if len(st.session_state["messages"]) > 1:
-                if st.session_state["messages"][-2]["role"] == "user":
-                    with st.chat_message(st.session_state["messages"][-2]["role"]):
-                        st.markdown(st.session_state["messages"][-2]["content"])
-            with st.chat_message(st.session_state["messages"][-1]["role"]):
-                st.markdown(st.session_state["messages"][-1]["content"])
+                
 
 def trigger_bot_thinking(user_input):
     cookies["display_message_separator"] = "False"
-    st.info("🤖 Thinking...")
-    sleep(2)
 
     # Append user message to the chat
     st.session_state["messages"].append({"role": "user", "content": user_input})
@@ -211,10 +209,8 @@ def trigger_bot_thinking(user_input):
 
 def process_teacher_bot_response(btn_payload, selected_class_name=None, selected_class_number=None):
     user_email = cookies.get("user_email")
-    response, _ = send_message(btn_payload, user_email, selected_class_name, selected_class_number)
-    st.info(btn_payload)
-    st.info(response)
-    sleep(3)
+    teacher_question = st.session_state["messages"][-1]["content"]
+    response, _ = send_message(btn_payload, user_email, selected_class_name, selected_class_number, teacher_question)
 
     # use st.status if btn_payload is /custom_teacher_query
     if btn_payload == "/custom_teacher_query":
@@ -242,7 +238,6 @@ def process_teacher_bot_response(btn_payload, selected_class_name=None, selected
                 st.markdown(error_message)
 
     # clear the selected button payload
-    st.session_state["selected_button_payload"] = None 
     st.session_state["teacher_message_sent"] = False  # Allow re-triggering
     # ✅ Reset `bot_thinking` so input appears again
     st.session_state["bot_thinking"] = False
