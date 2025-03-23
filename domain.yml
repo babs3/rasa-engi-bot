@@ -13,6 +13,7 @@ intents:
   - most_popular_topics
   - total_questions
   - most_referenced_pdfs
+  - custom_teacher_query
 
 slots:
   user_query:
@@ -80,6 +81,8 @@ responses:
       payload: "/total_questions"
     - title: "Get most referenced PDFs"
       payload: "/most_referenced_pdfs"
+    - title: "Type your question"
+      payload: "/custom_teacher_query"
 
   utter_get_most_popular_topics:
   - text: "The most popular topics are:"
@@ -94,6 +97,7 @@ actions:
 - action_get_most_popular_topics
 - action_get_total_questions
 - action_get_most_referenced_pdfs
+- action_teacher_custom_question
 
 session_config:
   session_expiration_time: 60

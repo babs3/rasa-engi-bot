@@ -336,13 +336,13 @@ def get_overall_students_progress(teacher_email, class_name=None, class_number=N
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
     if class_name and class_number:
-        print("--- INSIDE 1 ---")
+        print("--- INSIDE 1 (name and number)---")
         cur.execute("SELECT students FROM classes WHERE teachers LIKE %s AND name LIKE %s AND number LIKE %s", (teacher_email, class_name, class_number))
     elif class_name:
-        print("--- INSIDE 2 ---")
+        print("--- INSIDE 2 (only name)---")
         cur.execute("SELECT students FROM classes WHERE teachers LIKE %s AND name LIKE %s", (teacher_email, class_name))
     else: # Get all students up_ids whose teacher is the current user
-        print("--- INSIDE 3 ---")
+        print("--- INSIDE 3 (all students)---")
         cur.execute("SELECT students FROM classes WHERE teachers LIKE %s", (teacher_email,))
     
     data = cur.fetchone()

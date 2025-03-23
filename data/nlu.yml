@@ -122,19 +122,4 @@ nlu:
 - intent: get_insights
   examples: |
     - buttons for insights
-
-- intent: most_popular_topics
-  examples: |
-    - most popular topics
-    - popular topics
-    - topics
-    - popular
-    - most popular
-    - most popular topics
-    - most popular
-
-- intent: total_questions
-  examples: |
-    - total questions
-    - questions count
-    - total number of questions
+  

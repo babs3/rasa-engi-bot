@@ -37,3 +37,8 @@ rules:
   steps:
     - intent: most_referenced_pdfs
     - action: action_get_most_referenced_pdfs
+
+- rule: Handle teacher's query
+  steps:
+    - intent: custom_teacher_query
+    - action: action_teacher_custom_question

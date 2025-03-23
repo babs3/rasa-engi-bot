@@ -343,7 +343,6 @@ class ActionGetTotalQuestions(Action):
         if selected_class_name == "All":
             selected_class_name = None
             selected_class_number = None
-
         
         df = get_overall_students_progress(teacher_email, selected_class_name, selected_class_number)
         result = df.shape[0]
@@ -359,8 +358,18 @@ class ActionGetMostPopularTopics(Action):
     def run(self, dispatcher, tracker, domain):
         print("\n📊 Getting most popular topics...")
         teacher_email = tracker.sender_id
+        selected_class_name = tracker.latest_message.get("metadata", {}).get("selected_class_name")
+        selected_class_number = tracker.latest_message.get("metadata", {}).get("selected_class_number")
+
+        print(f"Selected class: {selected_class_name}-{selected_class_number}")
+
+        if selected_class_number == "-1":
+            selected_class_number = None
+        if selected_class_name == "All":
+            selected_class_name = None
+            selected_class_number = None
         
-        df = get_overall_students_progress(teacher_email)
+        df = get_overall_students_progress(teacher_email, selected_class_name, selected_class_number)
 
         df["topic"] = df["topic"].str.lower()
         topic_counts = df["topic"].value_counts().reset_index()
@@ -387,8 +396,18 @@ class ActionGetMostReferencedPDFs(Action):
     def run(self, dispatcher, tracker, domain):
         print("\n📊 Getting most referenced PDFs...")
         teacher_email = tracker.sender_id
+        selected_class_name = tracker.latest_message.get("metadata", {}).get("selected_class_name")
+        selected_class_number = tracker.latest_message.get("metadata", {}).get("selected_class_number")
+
+        print(f"Selected class: {selected_class_name}-{selected_class_number}")
+
+        if selected_class_number == "-1":
+            selected_class_number = None
+        if selected_class_name == "All":
+            selected_class_name = None
+            selected_class_number = None
         
-        df = get_overall_students_progress(teacher_email)
+        df = get_overall_students_progress(teacher_email, selected_class_name, selected_class_number)
 
         df = df[df["pdfs"].apply(lambda x: bool(x) and x != "{}")]
         if not df.empty:
@@ -415,3 +434,49 @@ class ActionGetMostReferencedPDFs(Action):
             dispatcher.utter_message(text="I couldn't find any referenced PDFs.")
 
         return []
+    
+class ActionTeacherCustomQuestion(Action):
+    def name(self):
+        return "action_teacher_custom_question"
+    
+    def run(self, dispatcher, tracker, domain):
+        print("\n📊 Generating bot response...")
+        teacher_email = tracker.sender_id
+        teacher_question = tracker.latest_message.get("text")
+        selected_class_name = tracker.latest_message.get("metadata", {}).get("selected_class_name")
+        selected_class_number = tracker.latest_message.get("metadata", {}).get("selected_class_number")
+
+        print(f"Selected class: {selected_class_name}-{selected_class_number}")
+        print(f"Teacher question: {teacher_question}")
+
+        if selected_class_number == "-1":
+            selected_class_number = None
+        if selected_class_name == "All":
+            selected_class_name = None
+            selected_class_number = None
+        
+        df = get_overall_students_progress(teacher_email, selected_class_name, selected_class_number)
+
+        # remove response column
+        df = df.drop(columns=["student_up_id","response"])
+
+        prompt = f"Given the dataframe below that gathers students data about students questions of the right class, with the columns ['question', 'topic', 'pdfs', 'timestamp'], formulate an answer to the following teacher question: '{teacher_question}'. \n{df.to_string()}"
+        formatted_response = "Sorry, I couldn't generate a response..."
+        try:
+            g_model = genai.GenerativeModel("gemini-1.5-pro-latest")
+            response = g_model.generate_content(prompt)
+
+            if hasattr(response, "text") and response.text:
+                print("\n🎯 Gemini Response Generated Successfully!")
+                formatted_response = format_gemini_response(response.text)
+                print(formatted_response)
+                dispatcher.utter_message(text=formatted_response)
+            else:
+                print("\n⚠️ Gemini Response is empty.")
+                dispatcher.utter_message(text="Sorry, I couldn't generate a response.")
+        except Exception as e:
+            dispatcher.utter_message(text="Sorry, I couldn't process that request.")
+            print(f"\n❌ Error calling Gemini API: {e}")
+
+
+        print(df)
