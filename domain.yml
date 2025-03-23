@@ -81,15 +81,8 @@ responses:
       payload: "/total_questions"
     - title: "Get most referenced PDFs"
       payload: "/most_referenced_pdfs"
-    - title: "Type your question"
-      payload: "/custom_teacher_query"
-
-  utter_get_most_popular_topics:
-  - text: "The most popular topics are:"
-
-  utter_get_total_questions:
-  - text: "The total number of questions is:"
-  
+    #- title: "Type your question"
+    #  payload: "/custom_teacher_query"
 
 actions:
 - action_fetch_class_material
