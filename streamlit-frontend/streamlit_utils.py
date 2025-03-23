@@ -118,8 +118,8 @@ def register_form():
         year = st.number_input("📅 Year", min_value=1, max_value=5, step=1, key="register_year")
 
     elif role == "Teacher":
-        available_courses = ["Math", "Science", "History", "Computer Science", "English"]  # Example courses
-        courses = st.multiselect("📖 Select Courses", available_courses, key="register_courses")
+        available_classes = ["GEE", "LGP", "SCI"]  # Example classes
+        courses = st.multiselect("📖 Select Courses", available_classes, key="register_courses")
 
     if st.button("Register"):
         if not is_valid_email(email):
