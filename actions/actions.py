@@ -305,9 +305,9 @@ class ActionGetClassMaterialLocation(Action):
             if len(document_entries) > len(selected_materials) * 3: # means that the tokenization went wrong
                 print("\n👻 --> Tokenization went wrong, using pdfs from slot")
                 location_results = selected_materials
-                save_student_progress(sender_id, query, bot_response, topic, ", ".join(pdfs))
+                response = save_student_progress(sender_id, query, bot_response, topic, ", ".join(pdfs))
             else:
-                save_student_progress(sender_id, query, bot_response, topic, ", ".join(pdfs_insights))
+                response = save_student_progress(sender_id, query, bot_response, topic, ", ".join(pdfs_insights))
 
             print("\n🎯 Material location for query found!")
             print("\n📌 FINAL SORTED RESULTS:")
@@ -319,7 +319,7 @@ class ActionGetClassMaterialLocation(Action):
         else:
             print("\n⚠️  No exact references found, but you might check related PDFs.")
             
-            save_student_progress(sender_id, query, bot_response, topic, [])
+            response = save_student_progress(sender_id, query, bot_response, topic, [])
             dispatcher.utter_message(text="I couldn't find specific page references, but check related PDFs.")
 
         #clear the slots

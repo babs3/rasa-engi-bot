@@ -10,11 +10,12 @@ from psycopg2.extras import RealDictCursor
 import pandas as pd
 import requests
 import json
-
-from shared_models.models import db, Users, Student, Teacher, Classes
+import os
 
 # Generate a strong secret key for your application
-SECRET_KEY = "your_strong_secret_key_here"
+SECRET_KEY = "your_strong_secret_key_here" # ??
+
+CURRENT_CLASS = os.getenv("CURRENT_CLASS")
 
 # Cookie manager with password
 cookies = EncryptedCookieManager(prefix="chatbot_app_", password=SECRET_KEY)
@@ -22,14 +23,18 @@ cookies = EncryptedCookieManager(prefix="chatbot_app_", password=SECRET_KEY)
 if not cookies.ready():
     st.stop()
 
+
 # Database connection
 DB_CONFIG = {
-    "dbname": "chatbotdb",
-    "user": "admin",
-    "password": "password",
+    "dbname": os.getenv("POSTGRES_DB"),
+    "user": os.getenv("POSTGRES_USER"),
+    "password": os.getenv("POSTGRES_PASSWORD"),
     "host": "db",  # Docker service name
     "port": 5432
 }
+
+def get_db_connection():
+    return psycopg2.connect(**DB_CONFIG)
 
 
 def fetch_course_classes(course):
@@ -69,9 +74,23 @@ def fetch_message_history(user_email):
         return response.json() if response.status_code == 200 else {}
     return {}
 
-def get_db_connection():
-    return psycopg2.connect(**DB_CONFIG)
 
+def is_authorized(student_email):
+    student = fetch_student(student_email)
+    student_classes = student.get("classes")
+    student_classes = student_classes.split(",") if student_classes else []
+    #st.info(f"\n📗 Student classes: {student_classes}")
+    authorized = False
+    for class_ in student_classes:
+        code, num = class_.split("-")
+        if code == CURRENT_CLASS:
+            authorized = True
+            break
+    if not authorized:
+        st.info(f"❌ Student not in the current class: {CURRENT_CLASS}")
+        return False
+    return True
+    
 def get_user_role(user_email):
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -142,7 +161,6 @@ def register_form():
         # Get classes from Flask API
         available_classes = fetch_classes()
         df_classes = pd.DataFrame(available_classes)
-        st.info("df_classes: " + str(df_classes))
 
         # Create class code-number pairs
         df_classes["class_code_number"] = df_classes["code"] + "-" + df_classes["number"]
@@ -320,7 +338,6 @@ def get_class_progress(class_code, class_number):
     class_id = None
     if data:
         class_id = data['id']
-    st.info("class_id: " + str(class_id))
 
     cur.close()
     conn.close()
@@ -329,6 +346,6 @@ def get_class_progress(class_code, class_number):
     if progress:
         return progress
     else:
-        st.info(f"No progress data found for class: {class_code}-{class_number}")
-        return pd.DataFrame()
+        #st.info(f"No progress data found for class: {class_code}-{class_number}")
+        return []
 

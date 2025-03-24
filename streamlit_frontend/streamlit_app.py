@@ -22,7 +22,10 @@ def main():
             # get user role
             role = get_user_role(user_email)
             if role == "Student":
-                set_student_insights(user_email)
+                if not is_authorized(user_email):
+                    return
+                else:
+                    set_student_insights(user_email)
             else: # role == "Teacher"
                 set_teacher_insights(user_email) 
 

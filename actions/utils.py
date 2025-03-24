@@ -18,6 +18,8 @@ nlp = spacy.load("en_core_web_sm")
 with open("vector_store/bm25_index.pkl", "rb") as f:
     bm25_index, bm25_metadata, bm25_documents = pickle.load(f)
 
+CURRENT_CLASS = {os.getenv("CURRENT_CLASS")}
+
 # Database connection
 DB_CONFIG = {
     "dbname": "chatbotdb",
@@ -36,6 +38,11 @@ def fetch_student_progress(student_up, data):
     response = requests.post("http://flask-server:8080/api/save_progress/" + student_up, json=data)
     return response.json() if response.status_code == 200 else {}
 
+def fetch_classes():
+    response = requests.get("http://flask-server:8080/api/classes")
+    return response.json() if response.status_code == 200 else {}
+
+
 def get_db_connection():
     return psycopg2.connect(**DB_CONFIG)
 
@@ -43,17 +50,29 @@ def save_student_progress(user_email, user_message, bot_response, topic, pfds):
 
     student = fetch_student(user_email)
     student_up = student.get("student_up")
-    print(f"📗 Student: {fetch_student(user_email)}")
     if not student_up:
         return
-    print(f"📗 Student UP: {student_up}")
 
     student_classes = student.get("classes")
     student_classes = student_classes.split(",") if student_classes else []
-    print(f"📗 Student classes: {student_classes}")
+    print(f"\n📗 Student classes: {student_classes}")
+    
+    # get class number for the current class
+    for student_class in student_classes:
+        if student_class.startswith(CURRENT_CLASS):
+            class_number = student_class.split("-")[1]
+            break
+
+    # get id of the current class
+    classes = fetch_classes()
+    class_id = None
+    for class_ in classes:
+        if class_.get("code") == CURRENT_CLASS and class_.get("number") == class_number:
+            class_id = class_.get("id")
+            break
     
     data = {
-        "class_id": "2",  # Hardcoded class ID for now TODO: Update this
+        "class_id": class_id,
         "question": user_message,
         "response": bot_response,
         "topic": topic,
@@ -61,10 +80,8 @@ def save_student_progress(user_email, user_message, bot_response, topic, pfds):
     }
     
     message = fetch_student_progress(student_up, data)
-    if message:
-        print(f"📗 Progress saved: {message}")
-    else:
-        print(f"❌ Progress not saved:{message}")
+
+    return message
 
 def load_generic_words():
     """Load generic words from a saved file."""

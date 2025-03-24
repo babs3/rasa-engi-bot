@@ -26,6 +26,7 @@ services:
       POSTGRES_PASSWORD: "password"
       POSTGRES_DB: "chatbotdb"
       GOOGLE_API_KEY: "${GOOGLE_API_KEY}"  # Load API key from .env
+      CURRENT_CLASS: "${CURRENT_CLASS}"  # Load class from .env
 
   db:
     image: postgres:13
@@ -70,6 +71,7 @@ services:
       POSTGRES_USER: "admin"
       POSTGRES_PASSWORD: "password"
       POSTGRES_DB: "chatbotdb"
+      CURRENT_CLASS: "${CURRENT_CLASS}"
 
 
 networks:
