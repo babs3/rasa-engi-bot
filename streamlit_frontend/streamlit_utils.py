@@ -36,6 +36,16 @@ def fetch_classes():
     response = requests.get("http://flask-server:8080/api/classes")
     return response.json() if response.status_code == 200 else {}
 
+def fetch_teacher_classes(teacher_email):
+    response = requests.get("http://flask-server:8080/api/teacher_classes/" + teacher_email)
+    return response.json() if response.status_code == 200 else {}
+
+def fetch_class_progress(class_id):
+    response = requests.get("http://flask-server:8080/api/class_progress/" + str(class_id))
+    st.info(response.json())
+    sleep(5)
+    return response.json() if response.status_code == 200 else {}
+
 def get_db_connection():
     return psycopg2.connect(**DB_CONFIG)
 
@@ -158,10 +168,6 @@ def register_form():
                 'INSERT INTO "users" (name, role, email, password) VALUES (%s, %s, %s, %s) RETURNING id',
                 (name, role, email, hashed_password)
             )
-
-            #cur.execute('SELECT id FROM "users" WHERE email = %s', (user_email,))
-            #user = cur.fetchone()
-            #user_id = user['id']
 
             # get the user id
             user_id = cur.fetchone()[0]
@@ -289,55 +295,27 @@ def save_chat_history(user_email, user_message, bot_response):
     cur.close()
     conn.close()
 
-# Function to fetch teacher's classes
-def get_teacher_classes(teacher_email):
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute("""
-        SELECT id, course, name, number, students FROM classes WHERE teachers LIKE %s;
-    """, (f"%{teacher_email}%",))
-    classes = cur.fetchall()
-    conn.close()
-
-    return pd.DataFrame(classes, columns=["id", "course", "name", "number", "students"])
-
 # Function to fetch student progress for a teacher’s classes
-def get_class_progress(class_name, class_number):
-    if not class_name or not class_number:
-        return pd.DataFrame()
+def get_class_progress(class_code, class_number):
 
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    
-    # Get all students up_ids in the class (separated by commas)
-    cur.execute("SELECT students FROM classes WHERE name = %s and number = %s", (class_name,class_number))
+
+    cur.execute('SELECT id FROM "classes" WHERE code = %s and number = %s', (class_code, class_number))
     data = cur.fetchone()
-    
-    if not data or not data['students']:
-        cur.close()
-        conn.close()
-        return pd.DataFrame()
 
-    students = data['students'].split(",")
-
-    # Get all student progress for each student in the class
-    data = []
-    for student in students:
-        cur.execute("""
-            SELECT student_up_id, question, response, topic, pdfs, timestamp
-            FROM student_progress
-            WHERE student_up_id = %s
-            ORDER BY timestamp ASC;
-        """, (student,))
-        student_data = cur.fetchall()
-        if student_data:
-            data += student_data
+    class_id = None
+    if data:
+        class_id = data['id']
+    st.info(class_id)
 
     cur.close()
     conn.close()
 
-    if not data:
-        st.info(f"No progress data found for students in class: {class_name}")
+    progress = fetch_class_progress(class_id)
+    if progress:
+        return progress
+    else:
+        st.info(f"No progress data found for class: {class_code}-{class_number}")
         return pd.DataFrame()
 
-    return pd.DataFrame(data, columns=["student_up_id", "question", "response", "topic", "pdfs", "timestamp"])

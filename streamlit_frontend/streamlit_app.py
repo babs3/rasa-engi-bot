@@ -63,22 +63,26 @@ def chat_interface():
     if user_role == "Teacher":
 
         if not st.session_state.get("bot_thinking", False):
-            df_classes = get_teacher_classes(cookies.get("user_email"))
+            teacher_classes = fetch_teacher_classes(cookies.get("user_email"))
+            if not teacher_classes:
+                st.info(f"No classes found for teacher.")
+                return 
+            df_classes = pd.DataFrame(teacher_classes["classes"], columns=["code", "number", "course"])
 
             if df_classes.empty:
                 st.info("No assigned classes found.")
                 return
 
             # Create a unique identifier for each class by concatenating name and number
-            df_classes["class_identifier"] = df_classes["name"] + "-" + df_classes["number"]
+            df_classes["class_identifier"] = df_classes["code"] + "-" + df_classes["number"]
             # get all the unique class names to a list
-            class_names = df_classes["name"].unique()
+            class_codes = df_classes["code"].unique()
             # add all possible classes names to the class_identifier column
-            for class_name in class_names:
-                new_row = pd.DataFrame({"class_identifier": [class_name + "-All"], "name": [class_name], "number": ["-1"]})
+            for code in class_codes:
+                new_row = pd.DataFrame({"class_identifier": [code + "-All"], "code": [code], "number": ["-1"]})
                 df_classes = pd.concat([df_classes, new_row], ignore_index=True)
             # Add an "all" class to the list
-            all_class_row = pd.DataFrame({"class_identifier": ["All"], "name": ["All"], "number": ["-1"]})
+            all_class_row = pd.DataFrame({"class_identifier": ["All"], "code": ["All"], "number": ["-1"]})
             df_classes = pd.concat([df_classes, all_class_row], ignore_index=True)
 
             # Sidebar: Select class
@@ -88,12 +92,12 @@ def chat_interface():
             # Display insight buttons only if a class is selected
             if selected_class_identifier:
 
-                # Extract the selected class name and number
+                # Extract the selected class code and number
                 selected_class_row = df_classes[df_classes["class_identifier"] == selected_class_identifier].iloc[0]
-                selected_class_name = selected_class_row["name"]
+                selected_class_code = selected_class_row["code"]
                 selected_class_number = selected_class_row["number"]
 
-                st.session_state["selected_class_name"] = selected_class_name
+                st.session_state["selected_class_code"] = selected_class_code
                 st.session_state["selected_class_number"] = selected_class_number
 
                 # Populate buttons for insights
@@ -109,7 +113,7 @@ def chat_interface():
                     for i, btn in enumerate(buttons):
                         if cols[i].button(btn["title"]):
                             st.session_state["selected_button_payload"] = btn["payload"]
-                            process_bot_response(btn["payload"], selected_class_name, selected_class_number)
+                            process_bot_response(btn["payload"], selected_class_code, selected_class_number)
                             return
     
         if st.session_state["messages"]:
@@ -123,7 +127,7 @@ def chat_interface():
         if submit_button and custom_teacher_query.strip():
             # Append user message to the chat
             st.session_state["messages"].append({"role": "user", "content": custom_teacher_query})
-            process_bot_response("/custom_teacher_query", st.session_state["selected_class_name"], st.session_state["selected_class_number"], custom_teacher_query)
+            process_bot_response("/custom_teacher_query", st.session_state["selected_class_code"], st.session_state["selected_class_number"], custom_teacher_query)
             st.rerun()
                             
     else:
@@ -304,24 +308,26 @@ def set_teacher_insights(user_email):
     st.title("📊 Class Engagement Dashboard")
 
     # Fetch teacher's classes
-    df_classes = get_teacher_classes(user_email)
-
-    if df_classes.empty:
-        st.info("No assigned classes found.")
-        return
+    teacher_classes = fetch_teacher_classes(user_email)
+    st.info(teacher_classes)
+    if not teacher_classes:
+        st.info(f"No classes found for teacher: {user_email}")
+        return 
+    df_classes = pd.DataFrame(teacher_classes["classes"], columns=["code", "number", "course"])
+    st.info(df_classes)
 
     # Sidebar: Select class
-    selected_class = st.sidebar.selectbox("Select a Class", df_classes["name"].unique())
-    st.session_state["class_name"] = selected_class
+    selected_class_code = st.sidebar.selectbox("Select a Class", df_classes["code"].unique())
+    st.session_state["selected_class_code"] = selected_class_code
 
     # display available class numbers and let the teacher select one
     st.sidebar.write("Class Numbers:")
-    class_numbers = df_classes[df_classes["name"] == selected_class]["number"].values
+    class_numbers = df_classes[df_classes["code"] == selected_class_code]["number"].values
     selected_class_number = st.sidebar.selectbox("Select a Class Number", class_numbers)
-    st.session_state["class_number"] = selected_class_number
+    st.session_state["selected_class_number"] = selected_class_number
 
     # Fetch student progress for selected class
-    df = get_class_progress(selected_class, selected_class_number)
+    df = get_class_progress(selected_class_code, selected_class_number)
 
     if df.empty:
         st.info("No student interactions recorded.")
@@ -342,7 +348,7 @@ def set_teacher_insights(user_email):
     st.subheader("📈 Overview")
     col1, col2 = st.columns(2)
     col1.metric("Total Questions", len(df_filtered))
-    col2.metric("Unique Students", df_filtered["student_up_id"].nunique())
+    col2.metric("Unique Students", df_filtered["student_up"].nunique())
 
     # Topic Analysis
     st.subheader("📚 Most Discussed Topics")

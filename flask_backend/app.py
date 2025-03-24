@@ -1,5 +1,5 @@
 from flask import Flask
-from shared_models.models import db, Users, Student, Teacher, Classes
+from shared_models.models import *
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 import os
@@ -19,6 +19,23 @@ jwt = JWTManager(app)
 def get_classes():
     classes = Classes.query.all()
     return jsonify([{"code": c.code, "number": c.number, "course": c.course} for c in classes])
+
+@app.route("/api/teacher_classes/<email>", methods=["GET"])
+def get_teacher_classes(email):
+    teacher = Teacher.query.join(Users).filter(Users.email == email).first()
+    if not teacher:
+        return jsonify({"error": "Teacher not found"}), 404
+    print(teacher.classes)
+    classes = teacher.classes.split(",")
+    classes = Classes.query.filter(Classes.code.in_(classes)).all()
+
+    teacher_classes = [{"code": c.code, "number": c.number, "course": c.course} for c in classes]
+    return jsonify({"email": email, "classes": teacher_classes})
+
+@app.route("/api/class_progress/<class_id>", methods=["GET"])
+def get_class_progress(class_id):
+    progress = StudentProgress.query.filter(StudentProgress.class_id == class_id).all()
+    return jsonify([{"student_up": p.student_up, "question": p.question, "response": p.response, "topic": p.topic, "pdfs": p.pdfs, "timestamp": p.timestamp} for p in progress])
 
 
 if __name__ == "__main__":
