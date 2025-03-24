@@ -285,10 +285,8 @@ def set_student_insights(user_email):
 
             # order by count
             pdf_counts = pdf_counts.sort_values(by="Count", ascending=False) 
-            #st.info(pdf_counts)
             # show only top 5 pdfs
             top_pdfs = pdf_counts.head(5)
-            #st.info(top_pdfs)
 
             # display bar chart
             st.bar_chart(top_pdfs.set_index("PDF Name"))
@@ -309,12 +307,10 @@ def set_teacher_insights(user_email):
 
     # Fetch teacher's classes
     teacher_classes = fetch_teacher_classes(user_email)
-    st.info(teacher_classes)
     if not teacher_classes:
         st.info(f"No classes found for teacher: {user_email}")
         return 
     df_classes = pd.DataFrame(teacher_classes["classes"], columns=["code", "number", "course"])
-    st.info(df_classes)
 
     # Sidebar: Select class
     selected_class_code = st.sidebar.selectbox("Select a Class", df_classes["code"].unique())
@@ -366,7 +362,6 @@ def set_teacher_insights(user_email):
         for pdfs in df_filtered_pdfs["pdfs"].dropna():
             for pdf in pdfs.split(","):
                 pdf_list.append(pdf.split(" (Pages")[0].strip())
-        #st.info(pdf_list)
 
         # count the frequency of each pdf
         pdf_counts = pd.Series(pdf_list).value_counts().reset_index()
@@ -374,10 +369,8 @@ def set_teacher_insights(user_email):
 
         # order by count
         pdf_counts = pdf_counts.sort_values(by="Count", ascending=False) 
-        #st.info(pdf_counts)
         # show only top 5 pdfs
         top_pdfs = pdf_counts.head(5)
-        #st.info(top_pdfs)
 
         # display bar chart
         st.bar_chart(top_pdfs.set_index("PDF Name"))

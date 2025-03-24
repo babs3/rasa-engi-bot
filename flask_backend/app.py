@@ -37,8 +37,11 @@ def get_class_progress(class_id):
     progress = StudentProgress.query.filter(StudentProgress.class_id == class_id).all()
     return jsonify([{"student_up": p.student_up, "question": p.question, "response": p.response, "topic": p.topic, "pdfs": p.pdfs, "timestamp": p.timestamp} for p in progress])
 
+@app.route("/api/student_progress/<student>", methods=["GET"])
+def get_student_progress(student_up):
+    progress = StudentProgress.query.filter(StudentProgress.student_up == student_up).all()
+    return jsonify([{"class_id": p.class_id, "question": p.question, "response": p.response, "topic": p.topic, "pdfs": p.pdfs, "timestamp": p.timestamp} for p in progress])
+
 
 if __name__ == "__main__":
-    #with app.app_context():
-    #   db.create_all()
     app.run(host='0.0.0.0', port=8080)

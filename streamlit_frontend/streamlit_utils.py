@@ -42,9 +42,12 @@ def fetch_teacher_classes(teacher_email):
 
 def fetch_class_progress(class_id):
     response = requests.get("http://flask-server:8080/api/class_progress/" + str(class_id))
-    st.info(response.json())
-    sleep(5)
     return response.json() if response.status_code == 200 else {}
+
+def fetch_student_progress(student_up):
+    response = requests.get("http://flask-server:8080/api/student_progress/" + str(student_up))
+    return response.json() if response.status_code == 200 else {}
+
 
 def get_db_connection():
     return psycopg2.connect(**DB_CONFIG)
@@ -103,19 +106,23 @@ def load_chat_history(user_email):
 
 def get_student_progress(user_email):
     conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur = conn.cursor()
     
-    cur.execute("""
-        SELECT question, response, topic, pdfs, timestamp
-        FROM student_progress
-        WHERE student_up_id = (SELECT up_id FROM "users" WHERE email = %s)
-        ORDER BY timestamp ASC;
-    """, (user_email,))
+    cur.execute('SELECT id FROM "users" WHERE email = %s', (user_email,))
     data = cur.fetchall()
+    student_id = data[0][0]['id']
+
+    cur.execute('SELECT up FROM "student" WHERE user_id = %s', (student_id,))
+    data = cur.fetchall()
+    student_up = data[0][0]['up']
+
     cur.close()
     conn.close()
 
-    return pd.DataFrame(data, columns=["question", "response", "topic", "pdfs", "timestamp"])
+    student_progress = fetch_student_progress(student_up)
+    st.info(student_progress)
+
+    return pd.DataFrame(student_progress, columns=["class_id", "question", "response", "topic", "pdfs", "timestamp"])
 
 def register_form():
     st.subheader("Create a New Account")
@@ -171,11 +178,10 @@ def register_form():
 
             # get the user id
             user_id = cur.fetchone()[0]
-            st.info(user_id)
 
             if role == "Student":
                 cur.execute(
-                    'INSERT INTO "student" (up, user_id, course, year) VALUES (%s, %s, %s, %s) RETURNING id',
+                    'INSERT INTO "student" (up, user_id, course, year) VALUES (%s, %s, %s, %s)',
                     (up, user_id, course, year)
                 )
             elif role == "Teacher":
@@ -190,8 +196,8 @@ def register_form():
             conn.close()
 
         except Exception as e:
-            db.session.rollback()
             st.error(f"❌ Registration failed: {e}")
+            sleep(2)
             st.rerun()
         
         cookies["logged_in"] = "True"
