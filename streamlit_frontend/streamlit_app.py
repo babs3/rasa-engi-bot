@@ -131,9 +131,8 @@ def chat_interface():
             st.rerun()
                             
     else:
-
         # Load previous messages
-        if "messages" not in st.session_state:
+        if st.session_state["messages"] == []:
             st.session_state["messages"] = load_chat_history(cookies.get("user_email"))
 
         for message in st.session_state["messages"]:
@@ -234,9 +233,11 @@ def process_bot_response(trigger, selected_class_name=None, selected_class_numbe
     st.rerun()
     
 
-def set_student_insights(user_email):
+def set_student_insights(student_email):
     # UI Layout
-    df = get_student_progress(user_email)
+    student_progress = fetch_student_progress(student_email)
+    df = pd.DataFrame(student_progress, columns=["class_id", "question", "response", "topic", "pdfs", "timestamp"])
+
     st.title("📊 Student Progress Dashboard")
 
     if df.empty:

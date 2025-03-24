@@ -48,13 +48,26 @@ def fetch_class_progress(class_id):
     response = requests.get("http://flask-server:8080/api/class_progress/" + str(class_id))
     return response.json() if response.status_code == 200 else {}
 
-def fetch_student_progress(student_up):
+def fetch_student_progress(student_email):
+    student_up = fetch_student(student_email).get("student_up")
     response = requests.get("http://flask-server:8080/api/student_progress/" + str(student_up))
     return response.json() if response.status_code == 200 else {}
 
 def fetch_student(student_email):
     response = requests.get("http://flask-server:8080/api/get_student/" + student_email)
     return response.json() if response.status_code == 200 else {}
+
+def fetch_user(user_email):
+    response = requests.get("http://flask-server:8080/api/get_user/" + user_email)
+    return response.json() if response.status_code == 200 else {}
+
+def fetch_message_history(user_email):
+    user = fetch_user(user_email)
+    if user:
+        user_id = user.get("id")
+        response = requests.get("http://flask-server:8080/api/message_history/" + str(user_id))
+        return response.json() if response.status_code == 200 else {}
+    return {}
 
 def get_db_connection():
     return psycopg2.connect(**DB_CONFIG)
@@ -95,29 +108,18 @@ def login_form():
             st.error("❌ Invalid email or password!")
 
 def load_chat_history(user_email):
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-
-    cur.execute('SELECT question, response FROM message_history WHERE user_id = (SELECT id FROM "users" WHERE email = %s) ORDER BY timestamp ASC', (user_email,))
-    history = cur.fetchall()
-
-    cur.close()
-    conn.close()
+    history = fetch_message_history(user_email)
+    if not history:
+        st.info("No chat history found for this user.")
+        return []
 
     messages = []
     for entry in history:
-        messages.append({"role": "user", "content": entry["question"]})
-        messages.append({"role": "assistant", "content": entry["response"]})
+        messages.append({"role": "user", "content": entry.get("question")})
+        messages.append({"role": "assistant", "content": entry.get("response")})
 
     return messages  # Return structured messages
 
-def get_student_progress(student_email):
-
-    student_up = fetch_student(student_email).get("student_up")
-    st.info("student_up: " + str(student_up))
-    student_progress = fetch_student_progress(student_up)
-
-    return pd.DataFrame(student_progress, columns=["class_id", "question", "response", "topic", "pdfs", "timestamp"])
 
 def register_form():
     st.subheader("Create a New Account")

@@ -63,6 +63,19 @@ def get_student(email):
         return jsonify({"error": "Student not found"}), 404
     return jsonify({"user_id": student.user_id, "student_up": student.up, "course": student.course, "year": student.year, "classes": student.classes})
 
+@app.route("/api/get_user/<email>", methods=["GET"])
+def get_user(email):
+    user = Users.query.filter(Users.email == email).first()
+    print("User:")
+    print(user)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    return jsonify({"id": user.id, "name": user.name, "role": user.role, "email": user.email})
+
+@app.route("/api/message_history/<user_id>", methods=["GET"])
+def get_message_history(user_id):
+    history = MessageHistory.query.filter(MessageHistory.user_id == user_id).all()
+    return jsonify([{"question": h.question, "response": h.response, "timestamp": h.timestamp} for h in history])
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8080)
