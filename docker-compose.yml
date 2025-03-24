@@ -41,8 +41,11 @@ services:
 
   flask-server:
     build:
-      context: ./flask-backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: flask_backend/Dockerfile
+    volumes:
+      - ./flask_backend:/app/flask_backend
+      - ./shared_models:/app/shared_models
     ports:
       - 8080:8080
     networks:
@@ -54,8 +57,11 @@ services:
 
   streamlit-app:
     build:
-      context: ./streamlit-frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: streamlit_frontend/Dockerfile
+    volumes:
+      - ./streamlit_frontend:/app/streamlit_frontend
+      - ./shared_models:/app/shared_models
     ports:
       - "8501:8501"
     networks:
