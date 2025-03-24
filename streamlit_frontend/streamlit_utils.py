@@ -32,6 +32,10 @@ DB_CONFIG = {
 }
 
 
+def fetch_course_classes(course):
+    response = requests.get("http://flask-server:8080/api/course_classes/" + course)
+    return response.json() if response.status_code == 200 else {}
+
 def fetch_classes():
     response = requests.get("http://flask-server:8080/api/classes")
     return response.json() if response.status_code == 200 else {}
@@ -48,8 +52,8 @@ def fetch_student_progress(student_up):
     response = requests.get("http://flask-server:8080/api/student_progress/" + str(student_up))
     return response.json() if response.status_code == 200 else {}
 
-def fetch_student_up(student_email):
-    response = requests.get("http://flask-server:8080/api/get_student_up/" + student_email)
+def fetch_student(student_email):
+    response = requests.get("http://flask-server:8080/api/get_student/" + student_email)
     return response.json() if response.status_code == 200 else {}
 
 def get_db_connection():
@@ -109,8 +113,8 @@ def load_chat_history(user_email):
 
 def get_student_progress(student_email):
 
-    student_up = fetch_student_up(student_email).get("student_up")
-    st.info(student_up)
+    student_up = fetch_student(student_email).get("student_up")
+    st.info("student_up: " + str(student_up))
     student_progress = fetch_student_progress(student_up)
 
     return pd.DataFrame(student_progress, columns=["class_id", "question", "response", "topic", "pdfs", "timestamp"])
@@ -130,13 +134,22 @@ def register_form():
     # Additional fields based on role
     if role == "Student":
         up = st.text_input("🎓 University ID", key="register_up_id")
-        course = st.text_input("📚 Course", key="register_course")
         year = st.number_input("📅 Year", min_value=1, max_value=5, step=1, key="register_year")
+        course = st.text_input("📚 Course", key="register_course")
+
+        # Get classes from Flask API
+        available_classes = fetch_classes()
+        df_classes = pd.DataFrame(available_classes)
+        st.info("df_classes: " + str(df_classes))
+
+        # Create class code-number pairs
+        df_classes["class_code_number"] = df_classes["code"] + "-" + df_classes["number"]
+        class_codes = df_classes["class_code_number"].unique()
+        selected_class_codes = st.multiselect("📖 Select Classes", class_codes, key="register_classes")
+    
 
     elif role == "Teacher":
-
         available_classes = fetch_classes()  # Get classes from Flask API
-        st.info(available_classes)
         class_codes = [c["code"] for c in available_classes]
         class_codes = list(set(class_codes))  # Remove duplicates
         selected_class_codes = st.multiselect("📖 Select Classes", class_codes, key="register_classes")
@@ -171,9 +184,10 @@ def register_form():
             user_id = cur.fetchone()[0]
 
             if role == "Student":
+                selected_class_codes = ",".join(selected_class_codes)                
                 cur.execute(
-                    'INSERT INTO "student" (up, user_id, course, year) VALUES (%s, %s, %s, %s)',
-                    (up, user_id, course, year)
+                    'INSERT INTO "student" (up, user_id, course, year, classes) VALUES (%s, %s, %s, %s, %s)',
+                    (up, user_id, course, year, selected_class_codes)
                 )
             elif role == "Teacher":
                 selected_class_codes = ",".join(selected_class_codes)
@@ -304,7 +318,7 @@ def get_class_progress(class_code, class_number):
     class_id = None
     if data:
         class_id = data['id']
-    st.info(class_id)
+    st.info("class_id: " + str(class_id))
 
     cur.close()
     conn.close()

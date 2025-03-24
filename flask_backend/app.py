@@ -21,6 +21,11 @@ def get_classes():
     classes = Classes.query.all()
     return jsonify([{"code": c.code, "number": c.number, "course": c.course} for c in classes])
 
+@app.route("/api/course_classes/<course>", methods=["GET"])
+def get_course_classes(course):
+    classes = Classes.query.filter(Classes.course == course).all()
+    return jsonify([{"code": c.code, "number": c.number, "course": c.course} for c in classes])
+
 @app.route("/api/teacher_classes/<email>", methods=["GET"])
 def get_teacher_classes(email):
     teacher = Teacher.query.join(Users).filter(Users.email == email).first()
@@ -51,12 +56,12 @@ def save_progress(student_up):
     db.session.commit()
     return jsonify({"message": "Progress saved"})
 
-@app.route("/api/get_student_up/<email>", methods=["GET"])
-def get_student_up(email):
+@app.route("/api/get_student/<email>", methods=["GET"])
+def get_student(email):
     student = Student.query.join(Users).filter(Users.email == email).first()
     if not student:
         return jsonify({"error": "Student not found"}), 404
-    return jsonify({"student_up": student.up})
+    return jsonify({"user_id": student.user_id, "student_up": student.up, "course": student.course, "year": student.year, "classes": student.classes})
 
 
 if __name__ == "__main__":

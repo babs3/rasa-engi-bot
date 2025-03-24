@@ -12,8 +12,6 @@ import json
 import pandas as pd
 import requests
 
-MODEL = "GEE" # TODO
-
 nlp = spacy.load("en_core_web_sm")
 
 # Load BM25 index
@@ -29,8 +27,8 @@ DB_CONFIG = {
     "port": 5432
 }
 
-def fetch_student_up(student_email):
-    response = requests.get("http://flask-server:8080/api/get_student_up/" + student_email)
+def fetch_student(student_email):
+    response = requests.get("http://flask-server:8080/api/get_student/" + student_email)
     return response.json() if response.status_code == 200 else {}
 
 def fetch_student_progress(student_up, data):
@@ -43,13 +41,19 @@ def get_db_connection():
 
 def save_student_progress(user_email, user_message, bot_response, topic, pfds):
 
-    student_up = fetch_student_up(user_email).get("student_up")
+    student = fetch_student(user_email)
+    student_up = student.get("student_up")
+    print(f"📗 Student: {fetch_student(user_email)}")
     if not student_up:
         return
     print(f"📗 Student UP: {student_up}")
+
+    student_classes = student.get("classes")
+    student_classes = student_classes.split(",") if student_classes else []
+    print(f"📗 Student classes: {student_classes}")
     
     data = {
-        "class_id": MODEL,
+        "class_id": "2",  # Hardcoded class ID for now TODO: Update this
         "question": user_message,
         "response": bot_response,
         "topic": topic,

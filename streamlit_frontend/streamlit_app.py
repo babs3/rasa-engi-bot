@@ -277,7 +277,6 @@ def set_student_insights(user_email):
             for pdfs in df_filtered_pdfs["pdfs"].dropna():
                 for pdf in pdfs.split(","):
                     pdf_list.append(pdf.split(" (Pages")[0].strip())
-            #st.info(pdf_list)
 
             # count the frequency of each pdf
             pdf_counts = pd.Series(pdf_list).value_counts().reset_index()

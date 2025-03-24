@@ -30,6 +30,7 @@ class Student(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
     course = db.Column(db.String(100), nullable=False)
     year = db.Column(db.Integer, nullable=False)
+    classes = db.Column(db.String, nullable=False) # Comma-separated class code-number
 
     # Relationships
     #progress = db.relationship('StudentProgress', backref='student', lazy=True)
