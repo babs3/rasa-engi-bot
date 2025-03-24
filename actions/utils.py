@@ -10,6 +10,9 @@ from psycopg2.extras import RealDictCursor
 import os
 import json
 import pandas as pd
+import requests
+
+MODEL = "GEE" # TODO
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -26,26 +29,38 @@ DB_CONFIG = {
     "port": 5432
 }
 
+def fetch_student_up(student_email):
+    response = requests.get("http://flask-server:8080/api/get_student_up/" + student_email)
+    return response.json() if response.status_code == 200 else {}
+
+def fetch_student_progress(student_up, data):
+    # Make the POST request to the save_progress endpoint
+    response = requests.post("http://flask-server:8080/api/save_progress/" + student_up, json=data)
+    return response.json() if response.status_code == 200 else {}
+
 def get_db_connection():
     return psycopg2.connect(**DB_CONFIG)
 
 def save_student_progress(user_email, user_message, bot_response, topic, pfds):
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
 
-    cur.execute('SELECT up_id FROM "users" WHERE email = %s', (user_email,))
-    user = cur.fetchone()
-
-    if user:
-        user_id = user['up_id']
-        cur.execute(
-            "INSERT INTO student_progress (student_up_id, question, response, topic, pdfs, timestamp) VALUES (%s, %s, %s, %s, %s, NOW())",
-            (user_id, user_message, bot_response, topic, pfds)
-        )
-        conn.commit()
+    student_up = fetch_student_up(user_email).get("student_up")
+    if not student_up:
+        return
+    print(f"📗 Student UP: {student_up}")
     
-    cur.close()
-    conn.close()
+    data = {
+        "class_id": MODEL,
+        "question": user_message,
+        "response": bot_response,
+        "topic": topic,
+        "pdfs": pfds
+    }
+    
+    message = fetch_student_progress(student_up, data)
+    if message:
+        print(f"📗 Progress saved: {message}")
+    else:
+        print(f"❌ Progress not saved:{message}")
 
 def load_generic_words():
     """Load generic words from a saved file."""

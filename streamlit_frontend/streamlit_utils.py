@@ -48,6 +48,9 @@ def fetch_student_progress(student_up):
     response = requests.get("http://flask-server:8080/api/student_progress/" + str(student_up))
     return response.json() if response.status_code == 200 else {}
 
+def fetch_student_up(student_email):
+    response = requests.get("http://flask-server:8080/api/get_student_up/" + student_email)
+    return response.json() if response.status_code == 200 else {}
 
 def get_db_connection():
     return psycopg2.connect(**DB_CONFIG)
@@ -104,23 +107,11 @@ def load_chat_history(user_email):
 
     return messages  # Return structured messages
 
-def get_student_progress(user_email):
-    conn = get_db_connection()
-    cur = conn.cursor()
-    
-    cur.execute('SELECT id FROM "users" WHERE email = %s', (user_email,))
-    data = cur.fetchall()
-    student_id = data[0][0]['id']
+def get_student_progress(student_email):
 
-    cur.execute('SELECT up FROM "student" WHERE user_id = %s', (student_id,))
-    data = cur.fetchall()
-    student_up = data[0][0]['up']
-
-    cur.close()
-    conn.close()
-
+    student_up = fetch_student_up(student_email).get("student_up")
+    st.info(student_up)
     student_progress = fetch_student_progress(student_up)
-    st.info(student_progress)
 
     return pd.DataFrame(student_progress, columns=["class_id", "question", "response", "topic", "pdfs", "timestamp"])
 

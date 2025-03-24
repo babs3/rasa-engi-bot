@@ -4,6 +4,7 @@ from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 import os
 from flask import jsonify
+from flask import request
 
 app = Flask(__name__)
 
@@ -37,10 +38,25 @@ def get_class_progress(class_id):
     progress = StudentProgress.query.filter(StudentProgress.class_id == class_id).all()
     return jsonify([{"student_up": p.student_up, "question": p.question, "response": p.response, "topic": p.topic, "pdfs": p.pdfs, "timestamp": p.timestamp} for p in progress])
 
-@app.route("/api/student_progress/<student>", methods=["GET"])
+@app.route("/api/student_progress/<student_up>", methods=["GET"])
 def get_student_progress(student_up):
     progress = StudentProgress.query.filter(StudentProgress.student_up == student_up).all()
     return jsonify([{"class_id": p.class_id, "question": p.question, "response": p.response, "topic": p.topic, "pdfs": p.pdfs, "timestamp": p.timestamp} for p in progress])
+
+@app.route("/api/save_progress/<student_up>", methods=["POST"])
+def save_progress(student_up):
+    data = request.json
+    progress = StudentProgress(student_up=student_up, class_id=data["class_id"], question=data["question"], response=data["response"], topic=data["topic"], pdfs=data["pdfs"])
+    db.session.add(progress)
+    db.session.commit()
+    return jsonify({"message": "Progress saved"})
+
+@app.route("/api/get_student_up/<email>", methods=["GET"])
+def get_student_up(email):
+    student = Student.query.join(Users).filter(Users.email == email).first()
+    if not student:
+        return jsonify({"error": "Student not found"}), 404
+    return jsonify({"student_up": student.up})
 
 
 if __name__ == "__main__":
