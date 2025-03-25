@@ -1,12 +1,9 @@
 import streamlit as st
 import re
 import hashlib
-import psycopg2
 from datetime import datetime
 from streamlit_cookies_manager import EncryptedCookieManager
 from time import sleep
-from streamlit_extras.stylable_container import stylable_container
-from psycopg2.extras import RealDictCursor
 import pandas as pd
 import requests
 import json
@@ -14,40 +11,24 @@ import os
 
 from shared.flask_requests import *
 
-
 # Generate a strong secret key for your application
 SECRET_KEY = "your_strong_secret_key_here" # ??
-
 CURRENT_CLASS = os.getenv("CURRENT_CLASS")
 
 # Cookie manager with password
 cookies = EncryptedCookieManager(prefix="chatbot_app_", password=SECRET_KEY)
-
 if not cookies.ready():
     st.stop()
-
-
-# Database connection
-DB_CONFIG = {
-    "dbname": os.getenv("POSTGRES_DB"),
-    "user": os.getenv("POSTGRES_USER"),
-    "password": os.getenv("POSTGRES_PASSWORD"),
-    "host": "db",  # Docker service name
-    "port": 5432
-}
-
-def get_db_connection():
-    return psycopg2.connect(**DB_CONFIG)
 
 
 def is_authorized(student_email):
     student = fetch_student(student_email)
     student_classes = student.get("classes")
-    student_classes = student_classes.split(",") if student_classes else []
-    #st.info(f"\n📗 Student classes: {student_classes}")
+    student_classes = student_classes.split(",") if len(student_classes) > 1 else student_classes
+
     authorized = False
     for class_ in student_classes:
-        code, num = class_.split("-")
+        code, _ = class_.split("-")
         if code == CURRENT_CLASS:
             authorized = True
             break
@@ -57,13 +38,10 @@ def is_authorized(student_email):
     return True
     
 def get_user_role(user_email):
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute('SELECT role FROM "users" WHERE email = %s', (user_email,))
-    user = cur.fetchone()
-    cur.close()
-    conn.close()
-    return user['role']
+    user = fetch_user(user_email)
+    if user:
+        return user.get("role")
+    return None
 
 def is_valid_email(email):
     pattern = r'^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$'
@@ -82,7 +60,8 @@ def login_form():
         if not is_valid_email(email):
             st.error("❌ Invalid email format!")
             return
-        if authenticate_user(email, password):
+        response = authenticate_user(email, password).get("status_code")
+        if response != {}:
             cookies["logged_in"] = "True"
             cookies["user_email"] = email
             cookies.save()
@@ -131,7 +110,6 @@ def register_form():
         df_classes["class_code_number"] = df_classes["code"] + "-" + df_classes["number"]
         class_codes = df_classes["class_code_number"].unique()
         selected_class_codes = st.multiselect("📖 Select Classes", class_codes, key="register_classes")
-    
 
     elif role == "Teacher":
         available_classes = fetch_classes()  # Get classes from Flask API
@@ -149,46 +127,18 @@ def register_form():
         if password != confirm_password:
             st.error("❌ Passwords do not match!")
             return
-        elif user_exists(email):
+        elif fetch_user(email):            
             st.error("❌ Email already registered! Try logging in.")
             return
         
         # Create new user
         hashed_password = hash_password(password)
-        try:
-            conn = get_db_connection()
-            cur = conn.cursor()
+        selected_class_codes = ",".join(selected_class_codes)
 
-            # Insert user into database
-            cur.execute(
-                'INSERT INTO "users" (name, role, email, password) VALUES (%s, %s, %s, %s) RETURNING id',
-                (name, role, email, hashed_password)
-            )
-
-            # get the user id
-            user_id = cur.fetchone()[0]
-
-            if role == "Student":
-                selected_class_codes = ",".join(selected_class_codes)                
-                cur.execute(
-                    'INSERT INTO "student" (up, user_id, course, year, classes) VALUES (%s, %s, %s, %s, %s)',
-                    (up, user_id, course, year, selected_class_codes)
-                )
-            elif role == "Teacher":
-                selected_class_codes = ",".join(selected_class_codes)
-                cur.execute(
-                    'INSERT INTO "teacher" (user_id, classes) VALUES (%s, %s) RETURNING id',
-                    (user_id, selected_class_codes)
-                )
-            
-            conn.commit()
-            cur.close()
-            conn.close()
-
-        except Exception as e:
-            st.error(f"❌ Registration failed: {e}")
-            sleep(2)
-            st.rerun()
+        if role == "Student":
+            register_student(name, email, hashed_password, up, course, year, selected_class_codes)
+        elif role == "Teacher":
+            register_teacher(name, email, hashed_password, selected_class_codes)
         
         cookies["logged_in"] = "True"
         cookies["user_email"] = email
@@ -199,29 +149,6 @@ def register_form():
 # Hash passwords before storing them
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
-
-# User authentication
-def authenticate_user(email, password):
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    hashed_password = hash_password(password)
-    cur.execute('SELECT * FROM "users" WHERE email = %s AND password = %s', (email, hashed_password))
-    user = cur.fetchone()
-    if user:
-        cur.close()
-        conn.close()
-        return True
-    return False
-
-# Check if user already exists
-def user_exists(email):
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-    cur.execute('SELECT * FROM "users" WHERE email = %s', (email,))
-    user = cur.fetchone()
-    cur.close()
-    conn.close()
-    return user is not None
 
 def logout():
     st.session_state.clear()
@@ -273,44 +200,3 @@ def send_message(user_input, user_email, selected_class_name=None, selected_clas
         st.error(f"⚠️ Error connecting to Rasa: {e}")
         return None
     
-def save_chat_history(user_email, user_message, bot_response):
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-
-    cur.execute('SELECT id FROM "users" WHERE email = %s', (user_email,))
-    user = cur.fetchone()
-
-    if user:
-        user_id = user['id']
-        cur.execute(
-            "INSERT INTO message_history (user_id, question, response, timestamp) VALUES (%s, %s, %s, NOW())",
-            (user_id, user_message, bot_response)
-        )
-        conn.commit()
-    
-    cur.close()
-    conn.close()
-
-# Function to fetch student progress for a teacher’s classes
-def get_class_progress(class_code, class_number):
-
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-
-    cur.execute('SELECT id FROM "classes" WHERE code = %s and number = %s', (class_code, class_number))
-    data = cur.fetchone()
-
-    class_id = None
-    if data:
-        class_id = data['id']
-
-    cur.close()
-    conn.close()
-
-    progress = fetch_class_progress(class_id)
-    if progress:
-        return progress
-    else:
-        #st.info(f"No progress data found for class: {class_code}-{class_number}")
-        return []
-

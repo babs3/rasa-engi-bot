@@ -64,9 +64,6 @@ services:
     networks:
       - my-project
     environment:
-      POSTGRES_USER: "admin"
-      POSTGRES_PASSWORD: "password"
-      POSTGRES_DB: "chatbotdb"
       CURRENT_CLASS: "${CURRENT_CLASS}"
 
 

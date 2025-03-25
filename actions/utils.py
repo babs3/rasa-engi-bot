@@ -52,7 +52,7 @@ def save_student_progress(user_email, user_message, bot_response, topic, pfds):
         "pdfs": pfds
     }
     
-    message = fetch_student_progress(student_up, data)
+    message = save_student_progress(student_up, data)
 
     return message
 

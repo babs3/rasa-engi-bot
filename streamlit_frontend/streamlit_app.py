@@ -26,7 +26,7 @@ def main():
                     return
                 else:
                     set_student_insights(user_email)
-            else: # role == "Teacher"
+            elif role == "Teacher":
                 set_teacher_insights(user_email) 
 
         else:
@@ -52,10 +52,8 @@ def main():
 def auth_tabs():
     st.title("🔑 Authentication")
     tab1, tab2 = st.tabs(["Login", "Register"])
-
     with tab1:
         login_form()
-
     with tab2:
         register_form()
 
@@ -220,7 +218,7 @@ def process_bot_response(trigger, selected_class_name=None, selected_class_numbe
 
             if response:
                 st.session_state["messages"].append({"role": "assistant", "content": response})
-                save_chat_history(user_email, trigger, response)
+                save_message_history(user_email, {"question": trigger, "response": response})
 
                 with st.chat_message("assistant"):
                     st.markdown(response)
@@ -325,8 +323,11 @@ def set_teacher_insights(user_email):
     selected_class_number = st.sidebar.selectbox("Select a Class Number", class_numbers)
     st.session_state["selected_class_number"] = selected_class_number
 
+    # get class id
+    class_id = df_classes[(df_classes["code"] == selected_class_code) & (df_classes["number"] == selected_class_number)]["id"]
+
     # Fetch student progress for selected class
-    class_progress = get_class_progress(selected_class_code, selected_class_number)
+    class_progress = fetch_class_progress(class_id)
     if class_progress == []:
         st.info("No student interactions recorded.")
         return

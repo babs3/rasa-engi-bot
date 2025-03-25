@@ -77,5 +77,48 @@ def get_message_history(user_id):
     history = MessageHistory.query.filter(MessageHistory.user_id == user_id).all()
     return jsonify([{"question": h.question, "response": h.response, "timestamp": h.timestamp} for h in history])
 
+@app.route("/api/authenticate", methods=["POST"])
+def authenticate():
+    data = request.json
+    user = Users.query.filter(Users.email == data["email"], Users.password == data["password"]).first()
+    if not user:
+        return jsonify({"error": "Invalid credentials"}), 401
+    return jsonify({"id": user.id, "name": user.name, "role": user.role, "email": user.email}), 200
+
+@app.route("/api/save_message_history/<user_id>", methods=["POST"])
+def save_message_history(user_id):
+    data = request.json
+    history = MessageHistory(user_id=user_id, question=data["question"], response=data["response"])
+    db.session.add(history)
+    db.session.commit()
+    return jsonify({"message": "History saved"})
+
+@app.route("/api/register_student", methods=["POST"])
+def register_student():
+    data = request.json
+    user = Users(name=data["name"], role="Student", email=data["email"], password=data["password"])
+    db.session.add(user)
+    db.session.commit()
+
+    classes = ",".join(data["classes"].split(","))
+    student = Student(up=data["up"], user_id=user.id, course=data["course"], year=data["year"], classes=classes)
+    db.session.add(student)
+    db.session.commit()
+    return jsonify({"message": "Student registered"})
+
+@app.route("/api/register_teacher", methods=["POST"])
+def register_teacher():
+    data = request.json
+    user = Users(name=data["name"], role="Teacher", email=data["email"], password=data["password"])
+    db.session.add(user)
+    db.session.commit()
+
+    classes = data["classes"].split(",")
+    teacher = Teacher(user_id=user.id, classes=classes)
+    db.session.add(teacher)
+    db.session.commit()
+    return jsonify({"message": "Teacher registered"})
+
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8080)
