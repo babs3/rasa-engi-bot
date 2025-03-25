@@ -326,12 +326,14 @@ def set_teacher_insights(user_email):
     st.session_state["selected_class_number"] = selected_class_number
 
     # Fetch student progress for selected class
-    df = get_class_progress(selected_class_code, selected_class_number)
-
-    if df.empty:
+    class_progress = get_class_progress(selected_class_code, selected_class_number)
+    if class_progress == []:
         st.info("No student interactions recorded.")
         return
 
+    # Create a DataFrame from the class progress
+    df = pd.DataFrame(class_progress, columns=["student_up", "question", "response", "topic", "pdfs", "timestamp"])
+    
     # Convert timestamp to datetime
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     df["Date"] = df["timestamp"].dt.date

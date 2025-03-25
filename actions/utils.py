@@ -366,6 +366,11 @@ def correct_query_tokens(tokens, set):
     """Corrects a list of tokens for spelling mistakes."""
     return [correct_spelling(token, set) for token in tokens]
 
+
+def fetch_class_progress(class_id):
+    response = requests.get("http://flask-server:8080/api/class_progress/" + str(class_id))
+    return response.json() if response.status_code == 200 else {}
+
 def get_overall_students_progress(teacher_email, class_name=None, class_number=None):
 
     conn = get_db_connection()
