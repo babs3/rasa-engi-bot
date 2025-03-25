@@ -28,11 +28,11 @@ def save_student_progress(user_email, user_message, bot_response, topic, pfds):
 
     student_classes = student.get("classes")
     student_classes = student_classes.split(",") if student_classes else []
-    print(f"\n📗 Student classes: {student_classes}")
     
     # get class number for the current class
     for student_class in student_classes:
-        if student_class.startswith(CURRENT_CLASS):
+        code, _ = student_class.split("-")
+        if code == CURRENT_CLASS:
             class_number = student_class.split("-")[1]
             break
 
@@ -52,7 +52,7 @@ def save_student_progress(user_email, user_message, bot_response, topic, pfds):
         "pdfs": pfds
     }
     
-    message = save_student_progress(student_up, data)
+    message = save_progress(student_up, data)
 
     return message
 
