@@ -68,7 +68,7 @@ def chat_interface():
             if not teacher_classes:
                 st.info(f"No classes found for teacher.")
                 return 
-            df_classes = pd.DataFrame(teacher_classes["classes"], columns=["id", "code", "number", "course"])
+            df_classes = pd.DataFrame(teacher_classes, columns=["id", "code", "number", "course"])
 
             if df_classes.empty:
                 st.info("No assigned classes found.")
@@ -314,8 +314,8 @@ def set_teacher_insights(user_email):
     if not teacher_classes:
         st.info(f"No classes found for teacher: {user_email}")
         return 
-    df_classes = pd.DataFrame(teacher_classes["classes"], columns=["id", "code", "number", "course"])
-
+    df_classes = pd.DataFrame(teacher_classes, columns=["id", "code", "number", "course"])
+    
     # Sidebar: Select class
     selected_class_code = st.sidebar.selectbox("Select a Class", df_classes["code"].unique())
     st.session_state["selected_class_code"] = selected_class_code
@@ -326,8 +326,13 @@ def set_teacher_insights(user_email):
     selected_class_number = st.sidebar.selectbox("Select a Class Number", class_numbers)
     st.session_state["selected_class_number"] = selected_class_number
 
-    # get class id
-    class_id = df_classes[(df_classes["code"] == selected_class_code) & (df_classes["number"] == selected_class_number)]["id"]
+    # get id of the current class
+    classes = fetch_classes()
+    class_id = None
+    for class_ in classes:
+        if class_.get("code") == selected_class_code and class_.get("number") == selected_class_number:
+            class_id = class_.get("id")
+            break
 
     # Fetch student progress for selected class
     class_progress = fetch_class_progress(class_id)

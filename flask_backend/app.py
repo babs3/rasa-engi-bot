@@ -31,12 +31,12 @@ def get_teacher_classes(email):
     teacher = Teacher.query.join(Users).filter(Users.email == email).first()
     if not teacher:
         return jsonify({"error": "Teacher not found"}), 404
-    print(teacher.classes)
+    print(teacher.classes) 
     classes = teacher.classes.split(",")
     classes = Classes.query.filter(Classes.code.in_(classes)).all()
 
-    teacher_classes = [{"id": c.id, "code": c.code, "number": c.number, "course": c.course} for c in classes]
-    return jsonify({"email": email, "classes": teacher_classes})
+    return jsonify([{"id": c.id, "code": c.code, "number": c.number, "course": c.course} for c in classes])
+
 
 @app.route("/api/class_progress/<class_id>", methods=["GET"])
 def get_class_progress(class_id):
@@ -113,7 +113,8 @@ def register_teacher():
     db.session.add(user)
     db.session.commit()
 
-    classes = data["classes"].split(",")
+    classes = ",".join(data["classes"].split(","))
+
     teacher = Teacher(user_id=user.id, classes=classes)
     db.session.add(teacher)
     db.session.commit()
