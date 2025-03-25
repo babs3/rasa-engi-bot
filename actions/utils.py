@@ -20,14 +20,6 @@ with open("vector_store/bm25_index.pkl", "rb") as f:
 
 CURRENT_CLASS = {os.getenv("CURRENT_CLASS")}
 
-# Database connection
-DB_CONFIG = {
-    "dbname": "chatbotdb",
-    "user": "admin",
-    "password": "password",
-    "host": "db",  # Docker service name
-    "port": 5432
-}
 
 def fetch_student(student_email):
     response = requests.get("http://flask-server:8080/api/get_student/" + student_email)
@@ -50,9 +42,6 @@ def fetch_teacher_classes(teacher_email):
     response = requests.get("http://flask-server:8080/api/teacher_classes/" + teacher_email)
     return response.json() if response.status_code == 200 else {}
 
-
-def get_db_connection():
-    return psycopg2.connect(**DB_CONFIG)
 
 def save_student_progress(user_email, user_message, bot_response, topic, pfds):
 

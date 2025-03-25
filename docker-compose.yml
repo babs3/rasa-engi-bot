@@ -31,14 +31,14 @@ services:
   db:
     image: postgres:13
     restart: always
-    environment:
-      POSTGRES_USER: "admin"
-      POSTGRES_PASSWORD: "password"
-      POSTGRES_DB: "chatbotdb"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - my-project
+    environment:
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "chatbotdb"
 
   flask-server:
     build:
@@ -46,7 +46,6 @@ services:
       dockerfile: flask_backend/Dockerfile
     volumes:
       - ./flask_backend:/app/flask_backend
-      - ./shared_models:/app/shared_models
     ports:
       - 8080:8080
     networks:
@@ -62,7 +61,6 @@ services:
       dockerfile: streamlit_frontend/Dockerfile
     volumes:
       - ./streamlit_frontend:/app/streamlit_frontend
-      - ./shared_models:/app/shared_models
     ports:
       - "8501:8501"
     networks:

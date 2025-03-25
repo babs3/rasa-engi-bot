@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY ./flask_backend/app.py /app/app.py
 COPY ./flask_backend/requirements.txt /app/requirements.txt
-COPY ./shared_models /app/shared_models
+COPY ./flask_backend/models.py /app/models.py
 
 RUN pip install --no-cache-dir -r requirements.txt
 
