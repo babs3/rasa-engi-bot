@@ -16,7 +16,7 @@ nlp = spacy.load("en_core_web_sm")
 with open("vector_store/bm25_index.pkl", "rb") as f:
     bm25_index, bm25_metadata, bm25_documents = pickle.load(f)
 
-CURRENT_CLASS = {os.getenv("CURRENT_CLASS")}
+CURRENT_CLASS = os.getenv("CURRENT_CLASS")
 
 
 def save_student_progress(user_email, user_message, bot_response, topic, pfds):
@@ -28,21 +28,25 @@ def save_student_progress(user_email, user_message, bot_response, topic, pfds):
 
     student_classes = student.get("classes")
     student_classes = student_classes.split(",") if student_classes else []
-    
     # get class number for the current class
     for student_class in student_classes:
-        code, _ = student_class.split("-")
+        code, num = student_class.split("-")
         if code == CURRENT_CLASS:
-            class_number = student_class.split("-")[1]
+            class_number = num
             break
 
     # get id of the current class
     classes = fetch_classes()
     class_id = None
     for class_ in classes:
+        print(f"\n📗 Class: {class_}")
+        print(f" class code: {class_.get('code')} - current class: {CURRENT_CLASS}")
+        print(f" class number: {class_.get('number')} - current class number: {class_number}")
         if class_.get("code") == CURRENT_CLASS and class_.get("number") == class_number:
             class_id = class_.get("id")
             break
+
+    print(f"\n📗 Class ID: {class_id}")
     
     data = {
         "class_id": class_id,

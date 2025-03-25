@@ -19,7 +19,7 @@ jwt = JWTManager(app)
 @app.route("/api/classes", methods=["GET"])
 def get_classes():
     classes = Classes.query.all()
-    return jsonify([{"code": c.code, "number": c.number, "course": c.course} for c in classes])
+    return jsonify([{"id": c.id, "code": c.code, "number": c.number, "course": c.course} for c in classes])
 
 @app.route("/api/course_classes/<course>", methods=["GET"])
 def get_course_classes(course):
