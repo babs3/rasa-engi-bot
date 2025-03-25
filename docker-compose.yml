@@ -16,17 +16,14 @@ services:
     volumes:
       - ./actions:/app/actions
       - ./vector_store:/app/vector_store
+      - ./shared:/app/shared
     ports:
       - 5055:5055
     networks:
       - my-project
     environment:
-      DB_TYPE: "postgres"
-      POSTGRES_USER: "admin"
-      POSTGRES_PASSWORD: "password"
-      POSTGRES_DB: "chatbotdb"
       GOOGLE_API_KEY: "${GOOGLE_API_KEY}"  # Load API key from .env
-      CURRENT_CLASS: "${CURRENT_CLASS}"  # Load class from .env
+      CURRENT_CLASS: "${CURRENT_CLASS}"
 
   db:
     image: postgres:13
@@ -61,6 +58,7 @@ services:
       dockerfile: streamlit_frontend/Dockerfile
     volumes:
       - ./streamlit_frontend:/app/streamlit_frontend
+      - ./shared:/app/shared
     ports:
       - "8501:8501"
     networks:

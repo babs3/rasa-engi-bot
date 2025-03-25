@@ -3,11 +3,10 @@ sys.modules["sqlite3"] = __import__("pysqlite3")
 import chromadb
 import numpy as np
 import google.generativeai as genai
-from rasa_sdk import Action, Tracker
+from rasa_sdk import Action
 from sentence_transformers import SentenceTransformer
 import os
 from rasa_sdk.events import SlotSet
-from sqlalchemy import create_engine, text
 from .utils import *
 
 # Load sentence transformer model

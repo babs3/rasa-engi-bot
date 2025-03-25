@@ -6,6 +6,7 @@ COPY ./actions/requirements.txt /app/requirements.txt
 COPY ./vector_store /app/vector_store
 COPY ./generic_words.json /app/generic_words.json
 COPY ./actions /app/actions
+COPY ./shared /app/shared
 
 USER root
 

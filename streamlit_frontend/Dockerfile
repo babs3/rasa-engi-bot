@@ -8,6 +8,7 @@ WORKDIR /app
 COPY ./streamlit_frontend/requirements.txt /app/requirements.txt
 COPY ./streamlit_frontend/streamlit_app.py /app/streamlit_app.py
 COPY ./streamlit_frontend/streamlit_utils.py /app/streamlit_utils.py
+COPY ./shared /app/shared
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt

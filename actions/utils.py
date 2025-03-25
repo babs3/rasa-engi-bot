@@ -5,12 +5,10 @@ from difflib import get_close_matches
 import re
 from itertools import product
 from nltk.corpus import wordnet
-import psycopg2
-from psycopg2.extras import RealDictCursor
 import os
 import json
 import pandas as pd
-import requests
+from shared.flask_requests import *
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -19,28 +17,6 @@ with open("vector_store/bm25_index.pkl", "rb") as f:
     bm25_index, bm25_metadata, bm25_documents = pickle.load(f)
 
 CURRENT_CLASS = {os.getenv("CURRENT_CLASS")}
-
-
-def fetch_student(student_email):
-    response = requests.get("http://flask-server:8080/api/get_student/" + student_email)
-    return response.json() if response.status_code == 200 else {}
-
-def fetch_student_progress(student_up, data):
-    # Make the POST request to the save_progress endpoint
-    response = requests.post("http://flask-server:8080/api/save_progress/" + student_up, json=data)
-    return response.json() if response.status_code == 200 else {}
-
-def fetch_classes():
-    response = requests.get("http://flask-server:8080/api/classes")
-    return response.json() if response.status_code == 200 else {}
-
-def fetch_class_progress(class_id):
-    response = requests.get("http://flask-server:8080/api/class_progress/" + str(class_id))
-    return response.json() if response.status_code == 200 else {}
-
-def fetch_teacher_classes(teacher_email):
-    response = requests.get("http://flask-server:8080/api/teacher_classes/" + teacher_email)
-    return response.json() if response.status_code == 200 else {}
 
 
 def save_student_progress(user_email, user_message, bot_response, topic, pfds):
