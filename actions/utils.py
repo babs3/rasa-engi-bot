@@ -345,7 +345,7 @@ def get_progress(teacher_email, class_code, class_number):
     if not teacher_classes:
         print(f"\n❌ No classes found for teacher.")
         return
-    df_classes = pd.DataFrame(teacher_classes["classes"], columns=["id", "code", "number", "course"])
+    df_classes = pd.DataFrame(teacher_classes, columns=["id", "code", "number", "course"])
 
     classes_ids = []
     if class_code and class_number:
