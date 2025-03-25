@@ -4,7 +4,11 @@ def fetch_student(student_email):
     response = requests.get("http://flask-server:8080/api/get_student/" + student_email)
     return response.json() if response.status_code == 200 else {}
 
-def fetch_student_progress(student_up):
+def fetch_student_progress(student_email):
+    student = fetch_student(student_email)
+    if not student:
+        return {}
+    student_up = student.get("student_up")
     response = requests.get("http://flask-server:8080/api/student_progress/" + student_up)
     return response.json() if response.status_code == 200 else {}
 

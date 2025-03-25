@@ -39,15 +39,10 @@ def save_student_progress(user_email, user_message, bot_response, topic, pfds):
     classes = fetch_classes()
     class_id = None
     for class_ in classes:
-        print(f"\n📗 Class: {class_}")
-        print(f" class code: {class_.get('code')} - current class: {CURRENT_CLASS}")
-        print(f" class number: {class_.get('number')} - current class number: {class_number}")
         if class_.get("code") == CURRENT_CLASS and class_.get("number") == class_number:
             class_id = class_.get("id")
             break
 
-    print(f"\n📗 Class ID: {class_id}")
-    
     data = {
         "class_id": class_id,
         "question": user_message,

@@ -237,6 +237,9 @@ def process_bot_response(trigger, selected_class_name=None, selected_class_numbe
 def set_student_insights(student_email):
     # UI Layout
     student_progress = fetch_student_progress(student_email)
+    st.info(student_progress)
+    if student_progress == {}:  # No progress found
+        return
     df = pd.DataFrame(student_progress, columns=["class_id", "question", "response", "topic", "pdfs", "timestamp"])
 
     st.title("📊 Student Progress Dashboard")
