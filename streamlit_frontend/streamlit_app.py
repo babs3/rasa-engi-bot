@@ -85,6 +85,14 @@ def chat_interface():
             # Add an "all" class to the list
             all_class_row = pd.DataFrame({"class_identifier": ["All"], "code": ["All"], "number": ["-1"]})
             df_classes = pd.concat([df_classes, all_class_row], ignore_index=True)
+            st.info(df_classes)
+
+            # count the number of each class, and drop the -All class if there is just one
+            class_counts = df_classes["code"].value_counts()
+            for code, count in class_counts.items():
+                if count == 1:
+                    df_classes = df_classes[df_classes["code"] != code + "-All"]
+            st.info(df_classes)
 
             # Sidebar: Select class
             selected_class_identifier = st.selectbox("📚 Select a Class", df_classes["class_identifier"].unique(), key="selected_class")

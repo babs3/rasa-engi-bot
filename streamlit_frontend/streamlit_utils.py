@@ -83,6 +83,9 @@ def load_chat_history(user_email):
 
     return messages  # Return structured messages
 
+def is_valid_up(up):
+    # up must be a number of 9 digits
+    return up.isdigit() and len(up) == 9
 
 def register_form():
     st.subheader("Create a New Account")
@@ -121,13 +124,15 @@ def register_form():
         if not is_valid_email(email):
             st.error("❌ Invalid email format!")
             return
-        #elif not is_strong_password(password):
+        #if not is_strong_password(password):
             #st.error("❌ Password must be at least 8 characters long, contain uppercase and lowercase letters, digits, and special characters.")
             #return
+        #if not is_valid_up(up):
+            #st.error("❌ Invalid University ID!")
         if password != confirm_password:
             st.error("❌ Passwords do not match!")
             return
-        elif fetch_user(email):            
+        if fetch_user(email):            
             st.error("❌ Email already registered! Try logging in.")
             return
         
