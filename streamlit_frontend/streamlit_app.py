@@ -76,23 +76,19 @@ def chat_interface():
 
             # Create a unique identifier for each class by concatenating name and number
             df_classes["class_identifier"] = df_classes["code"] + "-" + df_classes["number"]
-            # get all the unique class names to a list
-            class_codes = df_classes["code"].unique()
             # add all possible classes names to the class_identifier column
-            for code in class_codes:
-                new_row = pd.DataFrame({"class_identifier": [code + "-All"], "code": [code], "number": ["-1"]})
-                df_classes = pd.concat([df_classes, new_row], ignore_index=True)
-            # Add an "all" class to the list
-            all_class_row = pd.DataFrame({"class_identifier": ["All"], "code": ["All"], "number": ["-1"]})
-            df_classes = pd.concat([df_classes, all_class_row], ignore_index=True)
-            st.info(df_classes)
+            class_counts = df_classes["code"].value_counts().reset_index()
+            class_counts.columns = ["code", "count"]
+            for i, row in class_counts.iterrows():
+                if row["count"] > 1:
+                    new_row = pd.DataFrame({"class_identifier": [row["code"] + "-All"], "code": [row["code"]], "number": ["-1"]})
+                    df_classes = pd.concat([df_classes, new_row], ignore_index=True)
 
-            # count the number of each class, and drop the -All class if there is just one
-            class_counts = df_classes["code"].value_counts()
-            for code, count in class_counts.items():
-                if count == 1:
-                    df_classes = df_classes[df_classes["code"] != code + "-All"]
-            st.info(df_classes)
+            # check if there is only one class for the teacher
+            if len(class_counts) > 1:
+                # Add an "all" class to the list
+                all_class_row = pd.DataFrame({"class_identifier": ["All"], "code": ["All"], "number": ["-1"]})
+                df_classes = pd.concat([df_classes, all_class_row], ignore_index=True)
 
             # Sidebar: Select class
             selected_class_identifier = st.selectbox("📚 Select a Class", df_classes["class_identifier"].unique(), key="selected_class")
