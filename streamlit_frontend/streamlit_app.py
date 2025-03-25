@@ -14,7 +14,10 @@ def main():
         st.title("Engi-bot")
         if cookies.get("logged_in") == "True":
             user_email = cookies.get("user_email")
-            st.write(f"Logged in as **{user_email}**")
+            user=fetch_user(user_email)
+            if user:
+                st.write(f"Hello **{user.get('name')}**!")
+                #st.write(f"Logged in as **{user_email}**")
             
             if st.button("Logout"):
                 logout()
