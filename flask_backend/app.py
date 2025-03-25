@@ -35,7 +35,7 @@ def get_teacher_classes(email):
     classes = teacher.classes.split(",")
     classes = Classes.query.filter(Classes.code.in_(classes)).all()
 
-    teacher_classes = [{"code": c.code, "number": c.number, "course": c.course} for c in classes]
+    teacher_classes = [{"id": c.id, "code": c.code, "number": c.number, "course": c.course} for c in classes]
     return jsonify({"email": email, "classes": teacher_classes})
 
 @app.route("/api/class_progress/<class_id>", methods=["GET"])

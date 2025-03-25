@@ -42,6 +42,14 @@ def fetch_classes():
     response = requests.get("http://flask-server:8080/api/classes")
     return response.json() if response.status_code == 200 else {}
 
+def fetch_class_progress(class_id):
+    response = requests.get("http://flask-server:8080/api/class_progress/" + str(class_id))
+    return response.json() if response.status_code == 200 else {}
+
+def fetch_teacher_classes(teacher_email):
+    response = requests.get("http://flask-server:8080/api/teacher_classes/" + teacher_email)
+    return response.json() if response.status_code == 200 else {}
+
 
 def get_db_connection():
     return psycopg2.connect(**DB_CONFIG)
@@ -366,52 +374,36 @@ def correct_query_tokens(tokens, set):
     """Corrects a list of tokens for spelling mistakes."""
     return [correct_spelling(token, set) for token in tokens]
 
+# Function to fetch student progress for a teacher’s classes
+def get_progress(teacher_email, class_code, class_number):
 
-def fetch_class_progress(class_id):
-    response = requests.get("http://flask-server:8080/api/class_progress/" + str(class_id))
-    return response.json() if response.status_code == 200 else {}
+    teacher_classes = fetch_teacher_classes(teacher_email)
+    if not teacher_classes:
+        print(f"\n❌ No classes found for teacher.")
+        return
+    df_classes = pd.DataFrame(teacher_classes["classes"], columns=["id", "code", "number", "course"])
 
-def get_overall_students_progress(teacher_email, class_name=None, class_number=None):
-
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=RealDictCursor)
-
-    if class_name and class_number:
-        print("--- INSIDE 1 (name and number)---")
-        cur.execute("SELECT students FROM classes WHERE teachers LIKE %s AND name LIKE %s AND number LIKE %s", (teacher_email, class_name, class_number))
-    elif class_name:
-        print("--- INSIDE 2 (only name)---")
-        cur.execute("SELECT students FROM classes WHERE teachers LIKE %s AND name LIKE %s", (teacher_email, class_name))
-    else: # Get all students up_ids whose teacher is the current user
-        print("--- INSIDE 3 (all students)---")
-        cur.execute("SELECT students FROM classes WHERE teachers LIKE %s", (teacher_email,))
+    classes_ids = []
+    if class_code and class_number:
+        # get all classes ids by the code and number
+        classes_ids = df_classes[(df_classes["code"] == class_code) & (df_classes["number"] == class_number)]["id"].tolist()
+    elif class_code:
+        # get all classes ids by the code
+        classes_ids = df_classes[df_classes["code"] == class_code]["id"].tolist()
+    else: 
+        # get all classes ids of the teacher
+        classes_ids = df_classes["id"].tolist()
     
-    data = cur.fetchone()
+    print(f"\n📗 Classes IDs: {classes_ids}")
+
+    progress = []
+    for class_id in classes_ids:
+        progress += fetch_class_progress(class_id)
+
+    if progress:
+        return pd.DataFrame(progress, columns=["student_up", "question", "response", "topic", "pdfs", "timestamp"])
+
+    else:
+        print(f"\n❌ No progress data found for class: {class_code}-{class_number}")
+        return pd.DataFrame()
     
-    if not data or not data['students']:
-        cur.close()
-        conn.close()
-        return pd.DataFrame()
-
-    students = data['students'].split(",")
-
-    # Get all student progress for each student
-    data = []
-    for student in students:
-        cur.execute("""
-            SELECT student_up_id, question, response, topic, pdfs, timestamp
-            FROM student_progress
-            WHERE student_up_id = %s
-            ORDER BY timestamp ASC;
-        """, (student,))
-        student_data = cur.fetchall()
-        if student_data:
-            data += student_data
-
-    cur.close()
-    conn.close()
-
-    if not data:
-        return pd.DataFrame()
-
-    return pd.DataFrame(data, columns=["student_up_id", "question", "response", "topic", "pdfs", "timestamp"])

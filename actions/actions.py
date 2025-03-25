@@ -344,9 +344,12 @@ class ActionGetTotalQuestions(Action):
             selected_class_name = None
             selected_class_number = None
         
-        df = get_overall_students_progress(teacher_email, selected_class_name, selected_class_number)
-        result = df.shape[0]
+        df = get_progress(teacher_email, selected_class_name, selected_class_number)
+        if df.empty:
+            dispatcher.utter_message(text="There are no questions asked by students yet.")
+            return []
         
+        result = df.shape[0]
         dispatcher.utter_message(text=f"📊 Students have asked **{result}** questions in total.")
         return []
     
@@ -369,7 +372,11 @@ class ActionGetMostPopularTopics(Action):
             selected_class_name = None
             selected_class_number = None
         
-        df = get_overall_students_progress(teacher_email, selected_class_name, selected_class_number)
+        # df columns=["student_up", "question", "response", "topic", "pdfs", "timestamp"]
+        df = get_progress(teacher_email, selected_class_name, selected_class_number)
+        if df.empty:
+            dispatcher.utter_message(text="There are no questions asked by students yet.")
+            return []        
 
         df["topic"] = df["topic"].str.lower()
         topic_counts = df["topic"].value_counts().reset_index()
@@ -407,7 +414,10 @@ class ActionGetMostReferencedPDFs(Action):
             selected_class_name = None
             selected_class_number = None
         
-        df = get_overall_students_progress(teacher_email, selected_class_name, selected_class_number)
+        df = get_progress(teacher_email, selected_class_name, selected_class_number)
+        if df.empty:
+            dispatcher.utter_message(text="There are no questions asked by students yet.")
+            return []       
 
         df = df[df["pdfs"].apply(lambda x: bool(x) and x != "{}")]
         if not df.empty:
@@ -455,10 +465,13 @@ class ActionTeacherCustomQuestion(Action):
             selected_class_name = None
             selected_class_number = None
         
-        df = get_overall_students_progress(teacher_email, selected_class_name, selected_class_number)
+        df = get_progress(teacher_email, selected_class_name, selected_class_number)
+        if df.empty:
+            dispatcher.utter_message(text="There are no questions asked by students yet.")
+            return []       
 
-        # remove response column
-        df = df.drop(columns=["student_up_id","response"])
+        # remove columns that are not needed
+        df = df.drop(columns=["student_up","response"])
 
         prompt = f"The information below summarises the questions asked by students. Given this, formulate an answer taking into account the teacher's question: '{teacher_question}'. \n{df.to_string()}"
         formatted_response = "Sorry, I couldn't generate a response..."
@@ -477,6 +490,3 @@ class ActionTeacherCustomQuestion(Action):
         except Exception as e:
             dispatcher.utter_message(text="Sorry, I couldn't process that request.")
             print(f"\n❌ Error calling Gemini API: {e}")
-
-
-        print(df)
