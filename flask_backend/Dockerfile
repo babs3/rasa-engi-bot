@@ -2,14 +2,16 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-COPY ./flask_backend/app.py /app/app.py
-COPY ./flask_backend/requirements.txt /app/requirements.txt
-COPY ./flask_backend/models.py /app/models.py
+# Copy the entire flask_backend folder to /app
+COPY flask_backend /app/flask_backend
 
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy the requirements file and install dependencies
+COPY flask_backend/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
-ENV FLASK_APP=app.py
+# Set PYTHONPATH to include /app
+ENV PYTHONPATH=/app
 
 EXPOSE 8080
 
-CMD ["python", "app.py"]
+CMD ["python", "/app/flask_backend/app.py"]

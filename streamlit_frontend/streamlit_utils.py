@@ -9,7 +9,7 @@ import requests
 import json
 import os
 
-from shared.flask_requests import *
+from flask_requests import *
 
 # Generate a strong secret key for your application
 SECRET_KEY = "your_strong_secret_key_here" # ??

@@ -1,5 +1,5 @@
 from flask import Flask
-from flask_backend.models import *
+from models import *
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 import os

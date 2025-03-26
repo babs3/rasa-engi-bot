@@ -4,17 +4,15 @@ FROM python:3.9-slim
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy the Streamlit app files into the container
-COPY ./streamlit_frontend/requirements.txt /app/requirements.txt
-COPY ./streamlit_frontend/streamlit_app.py /app/streamlit_app.py
-COPY ./streamlit_frontend/streamlit_utils.py /app/streamlit_utils.py
-COPY ./shared /app/shared
+# Copy the entire streamlit_frontend folder to /app
+COPY streamlit_frontend /app/streamlit_frontend
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy the requirements file and install dependencies
+COPY streamlit_frontend/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Expose Streamlit's default port
 EXPOSE 8501
 
 # Command to run the Streamlit app
-CMD ["streamlit", "run", "streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "/app/streamlit_frontend/streamlit_app.py", "--server.port=8501"]
