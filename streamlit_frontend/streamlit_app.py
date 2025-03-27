@@ -6,9 +6,36 @@ import pandas as pd
 
 from streamlit_utils import *
 
+# Generate a strong secret key for your application
+SECRET_KEY = "your_strong_secret_key_here" # ??
+
+#@st.cache_resource
+def get_cookie_manager():
+    return EncryptedCookieManager(prefix="chatbot_app_", password=SECRET_KEY)
+
+cookies = get_cookie_manager()
+
+# Wait until cookies are ready
+if not cookies.ready():
+    #st.warning("Initializing session... Please wait.")
+    st.stop()  # Stop execution until cookies are available
+
 
 # Streamlit UI
 def main():
+
+    #if "scroll_down" not in st.session_state:
+    st.session_state["scroll_down"] = True
+    
+    if "display_message_separator" not in cookies:
+        cookies["display_message_separator"] = "True"
+    
+    if "input_disabled" not in st.session_state:
+        st.session_state.input_disabled = "False"
+
+    if "messages" not in st.session_state:
+        st.session_state["messages"] = []
+
     # Sidebar for logout
     with st.sidebar:
         st.title("Engi-bot")
@@ -34,18 +61,6 @@ def main():
 
         else:
             st.info("Please log in or register.")
-
-    #if "scroll_down" not in st.session_state:
-    st.session_state["scroll_down"] = True
-    
-    if "display_message_separator" not in cookies:
-        cookies["display_message_separator"] = "True"
-    
-    if "input_disabled" not in st.session_state:
-        st.session_state.input_disabled = "False"
-
-    if "messages" not in st.session_state:
-        st.session_state["messages"] = []
 
     if cookies.get("logged_in") != "True":
         auth_tabs()
@@ -402,6 +417,96 @@ def set_teacher_insights(user_email):
     st.subheader("📅 Engagement Over Time")
     daily_counts = df_filtered.groupby("Date").size().reset_index(name="questions")
     st.line_chart(daily_counts.set_index("Date"))
+
+def register_form():
+    st.subheader("Create a New Account")
+
+    # Basic user details
+    email = st.text_input("📧 Email", key="register_email")
+    name = st.text_input("👤 Name", key="register_name")
+    password = st.text_input("🔑 Password", type="password", key="register_password")
+    confirm_password = st.text_input("🔑 Confirm Password", type="password", key="confirm_password")
+
+    # Role selection
+    role = st.radio("Select Role", ["Student", "Teacher"], key="register_role")
+
+    # Additional fields based on role
+    if role == "Student":
+        up = st.text_input("🎓 University ID", key="register_up_id")
+        year = st.number_input("📅 Year", min_value=1, max_value=5, step=1, key="register_year")
+        course = st.text_input("📚 Course", key="register_course")
+
+        # Get classes from Flask API
+        available_classes = fetch_classes()
+        df_classes = pd.DataFrame(available_classes)
+
+        # Create class code-number pairs
+        df_classes["class_code_number"] = df_classes["code"] + "-" + df_classes["number"]
+        class_codes = df_classes["class_code_number"].unique()
+        selected_class_codes = st.multiselect("📖 Select Classes", class_codes, key="register_classes")
+
+    elif role == "Teacher":
+        available_classes = fetch_classes()  # Get classes from Flask API
+        class_codes = [c["code"] for c in available_classes]
+        class_codes = list(set(class_codes))  # Remove duplicates
+        selected_class_codes = st.multiselect("📖 Select Classes", class_codes, key="register_classes")
+
+    if st.button("Register"):
+        if not is_valid_email(email):
+            st.error("❌ Invalid email format!")
+            return
+        #if not is_strong_password(password):
+            #st.error("❌ Password must be at least 8 characters long, contain uppercase and lowercase letters, digits, and special characters.")
+            #return
+        #if not is_valid_up(up):
+            #st.error("❌ Invalid University ID!")
+        if password != confirm_password:
+            st.error("❌ Passwords do not match!")
+            return
+        if fetch_user(email):            
+            st.error("❌ Email already registered! Try logging in.")
+            return
+        
+        # Create new user
+        hashed_password = hash_password(password)
+        selected_class_codes = ",".join(selected_class_codes)
+
+        if role == "Student":
+            register_student(name, email, hashed_password, up, course, year, selected_class_codes)
+        elif role == "Teacher":
+            register_teacher(name, email, hashed_password, selected_class_codes)
+        
+        cookies["logged_in"] = "True"
+        cookies["user_email"] = email
+        cookies.save()
+        st.rerun()
+        
+def login_form():
+    st.subheader("Login to Your Account")
+    email = st.text_input("📧 Email", key="login_email")
+    password = st.text_input("🔒 Password", type="password", key="login_password")
+
+    if st.button("Login"):
+        if not is_valid_email(email):
+            st.error("❌ Invalid email format!")
+            return
+        response = authenticate_user(email, password).get("status_code")
+        if response != {}:
+            cookies["logged_in"] = "True"
+            cookies["user_email"] = email
+            cookies.save()
+            #st.success("✅ Login successful! Your previous chat history has been loaded.")
+            st.rerun()
+        else:
+            st.error("❌ Invalid email or password!")
+            
+def logout():
+    st.session_state.clear()
+    cookies["logged_in"] = "False"
+    cookies["user_email"] = ""
+    cookies["display_message_separator"] = "True"
+    cookies.save()
+    st.rerun()
 
 if __name__ == "__main__":
     main()
