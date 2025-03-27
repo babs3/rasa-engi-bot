@@ -3,6 +3,7 @@
 #import pysqlite3
 #sys.modules["sqlite3"] = pysqlite3
 import sqlite3
+from dotenv import load_dotenv
 import os
 import fitz  # PyMuPDF
 import chromadb
@@ -10,6 +11,9 @@ import numpy as np
 import pickle
 from rank_bm25 import BM25Okapi
 from sentence_transformers import SentenceTransformer
+
+load_dotenv()
+CURRENT_CLASS = os.getenv("CURRENT_CLASS")
 
 def extract_text_by_page(pdf_path):
     """Extracts text from each page of a PDF separately."""
@@ -23,7 +27,7 @@ def extract_text_by_page(pdf_path):
     
     return page_chunks
 
-def process_pdfs(pdf_folder="materials/GEE_pdfs", vector_db_path="vector_store"):
+def process_pdfs(pdf_folder=f"materials/{CURRENT_CLASS}", vector_db_path="vector_store"):
     """Processes PDFs and stores data in ChromaDB and BM25 index."""
     # Initialize ChromaDB client
     chroma_client = chromadb.PersistentClient(path=vector_db_path)

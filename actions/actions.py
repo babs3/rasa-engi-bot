@@ -16,7 +16,8 @@ model = SentenceTransformer("all-MiniLM-L6-v2")
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 # Connect to ChromaDB
-VECTOR_DB_PATH = "vector_store"
+CURRENT_CLASS = os.getenv("CURRENT_CLASS")
+VECTOR_DB_PATH = f"vector_store_{CURRENT_CLASS}"
 
 # Load collection data
 with open(f"{VECTOR_DB_PATH}/collection_backup.pkl", "rb") as f:

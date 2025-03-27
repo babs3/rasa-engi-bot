@@ -1,4 +1,8 @@
 ## Bot Pipeline
+Set CURRENT_CLASS in .env file
+```
+CURRENT_CLASS=GEE   # GEE, SCI, LGP
+```
 Create vector_store folder
 ```
 python process_pdfs.py

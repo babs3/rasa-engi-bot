@@ -2,7 +2,6 @@ import streamlit as st
 import re
 import hashlib
 from datetime import datetime
-from streamlit_cookies_manager import EncryptedCookieManager
 from time import sleep
 import pandas as pd
 import requests

@@ -11,7 +11,7 @@ import numpy as np
 nlp = spacy.load("en_core_web_sm")
 
 # Parameters
-PDF_FOLDER = os.path.join(os.path.dirname(__file__), "materials", "GEE_pdfs")
+PDF_FOLDER = os.path.join(os.path.dirname(__file__), "materials", "GEE")
 generic_words = set()
 DEFAULT_PERCENTILE = 20  # Adjust this to control filtering (10-30% is typical)
 

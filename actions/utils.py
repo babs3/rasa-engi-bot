@@ -12,11 +12,11 @@ from shared.flask_requests import *
 
 nlp = spacy.load("en_core_web_sm")
 
-# Load BM25 index
-with open("vector_store/bm25_index.pkl", "rb") as f:
-    bm25_index, bm25_metadata, bm25_documents = pickle.load(f)
-
 CURRENT_CLASS = os.getenv("CURRENT_CLASS")
+
+# Load BM25 index
+with open(f"vector_store_{CURRENT_CLASS}/bm25_index.pkl", "rb") as f:
+    bm25_index, bm25_metadata, bm25_documents = pickle.load(f)
 
 
 def save_student_progress(user_email, user_message, bot_response, topic, pfds):

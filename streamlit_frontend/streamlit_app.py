@@ -36,6 +36,8 @@ def main():
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
 
+    st.info(cookies.get("logged_in"))
+
     # Sidebar for logout
     with st.sidebar:
         st.title("Engi-bot")
@@ -44,7 +46,7 @@ def main():
             user=fetch_user(user_email)
             if user:
                 st.write(f"Hello **{user.get('name')}**!")
-                #st.write(f"Logged in as **{user_email}**")
+                st.write(f"Logged in as **{user_email}**")
             
             if st.button("Logout"):
                 logout()
@@ -491,6 +493,7 @@ def login_form():
             st.error("❌ Invalid email format!")
             return
         response = authenticate_user(email, password).get("status_code")
+        st.info("authenticate_user: " + str(response))
         if response != {}:
             cookies["logged_in"] = "True"
             cookies["user_email"] = email
