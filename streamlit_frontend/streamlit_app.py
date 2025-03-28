@@ -3,6 +3,7 @@ st.set_page_config("Engi-bot", '🤖', layout="wide")
 
 from streamlit_scroll_to_top import scroll_to_here
 import pandas as pd
+from streamlit_cookies_manager import EncryptedCookieManager
 
 from streamlit_utils import *
 
@@ -36,8 +37,6 @@ def main():
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
 
-    st.info(cookies.get("logged_in"))
-
     # Sidebar for logout
     with st.sidebar:
         st.title("Engi-bot")
@@ -46,7 +45,7 @@ def main():
             user=fetch_user(user_email)
             if user:
                 st.write(f"Hello **{user.get('name')}**!")
-                st.write(f"Logged in as **{user_email}**")
+                #st.write(f"Logged in as **{user_email}**")
             
             if st.button("Logout"):
                 logout()
@@ -261,7 +260,6 @@ def process_bot_response(trigger, selected_class_name=None, selected_class_numbe
 def set_student_insights(student_email):
     # UI Layout
     student_progress = fetch_student_progress(student_email)
-    st.info(student_progress)
     if student_progress == {}:  # No progress found
         return
     df = pd.DataFrame(student_progress, columns=["class_id", "question", "response", "topic", "pdfs", "timestamp"])
@@ -492,9 +490,9 @@ def login_form():
         if not is_valid_email(email):
             st.error("❌ Invalid email format!")
             return
-        response = authenticate_user(email, password).get("status_code")
-        st.info("authenticate_user: " + str(response))
-        if response != {}:
+        hashed_password = hash_password(password)
+        user = authenticate_user(email, hashed_password)
+        if user:
             cookies["logged_in"] = "True"
             cookies["user_email"] = email
             cookies.save()
@@ -509,6 +507,7 @@ def logout():
     cookies["user_email"] = ""
     cookies["display_message_separator"] = "True"
     cookies.save()
+    sleep(1)
     st.rerun()
 
 if __name__ == "__main__":

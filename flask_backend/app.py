@@ -66,8 +66,6 @@ def get_student(email):
 @app.route("/api/get_user/<email>", methods=["GET"])
 def get_user(email):
     user = Users.query.filter(Users.email == email).first()
-    print("User:")
-    print(user)
     if not user:
         return jsonify({"error": "User not found"}), 404
     return jsonify({"id": user.id, "name": user.name, "role": user.role, "email": user.email})
@@ -83,7 +81,7 @@ def authenticate():
     user = Users.query.filter(Users.email == data["email"], Users.password == data["password"]).first()
     if not user:
         return jsonify({"error": "Invalid credentials"}), 401
-    return jsonify({"id": user.id, "name": user.name, "role": user.role, "email": user.email}), 200
+    return jsonify({"id": user.id, "name": user.name, "role": user.role, "email": user.email})
 
 @app.route("/api/save_message_history/<user_id>", methods=["POST"])
 def save_message_history(user_id):
