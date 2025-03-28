@@ -41,17 +41,19 @@ def main():
     with st.sidebar:
         st.title("Engi-bot")
         if cookies.get("logged_in") == "True":
+            role = get_user_role(user_email)
             user_email = cookies.get("user_email")
             user=fetch_user(user_email)
             if user:
-                st.write(f"Hello **{user.get('name')}**!")
+                if role == "Student":
+                    st.write(f"Hello **{user.get('name')}**!")
+                else:
+                    st.write(f"Hello Professor **{user.get('name')}**!")
                 #st.write(f"Logged in as **{user_email}**")
             
             if st.button("Logout"):
                 logout()
-
-            # get user role
-            role = get_user_role(user_email)
+            
             if role == "Student":
                 if not is_authorized(user_email):
                     return
