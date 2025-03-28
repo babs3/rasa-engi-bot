@@ -33,9 +33,17 @@ services:
     networks:
       - my-project
     environment:
-      POSTGRES_USER: "admin"
-      POSTGRES_PASSWORD: "password"
-      POSTGRES_DB: "chatbotdb"
+      POSTGRES_USER: ${APP_DATABASE_USER}
+      POSTGRES_PASSWORD: ${APP_DATABASE_PASS}
+      POSTGRES_DB: ${APP_DATABASE_NAME}
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8081:8080"  # Map container's 8080 to host's 8081
+    networks:
+      - my-project
 
   flask-server:
     build:
@@ -48,9 +56,9 @@ services:
     networks:
       - my-project
     environment:
-      POSTGRES_USER: "admin"
-      POSTGRES_PASSWORD: "password"
-      POSTGRES_DB: "chatbotdb"
+      POSTGRES_USER: ${APP_DATABASE_USER}
+      POSTGRES_PASSWORD: ${APP_DATABASE_PASS}
+      POSTGRES_DB: ${APP_DATABASE_NAME}
 
   streamlit-app:
     build:
