@@ -60,7 +60,7 @@ services:
       - ./streamlit_frontend:/app/streamlit_frontend
       - ./shared:/app/shared
     ports:
-      - "8501:8501"
+      - "80:8501"
     networks:
       - my-project
     environment:

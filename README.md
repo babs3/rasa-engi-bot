@@ -93,3 +93,10 @@ Exit PostgreSQL container:
 ```
 \q
 ```
+
+## Virtual Environment
+
+Activate Virtual Environment
+```
+conda activate rasa-env
+```

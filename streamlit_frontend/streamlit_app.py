@@ -41,8 +41,8 @@ def main():
     with st.sidebar:
         st.title("Engi-bot")
         if cookies.get("logged_in") == "True":
-            role = get_user_role(user_email)
             user_email = cookies.get("user_email")
+            role = get_user_role(user_email)
             user=fetch_user(user_email)
             if user:
                 if role == "Student":
