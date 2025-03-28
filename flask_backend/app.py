@@ -23,7 +23,7 @@ def get_classes():
 
 @app.route("/api/course_classes/<course>", methods=["GET"])
 def get_course_classes(course):
-    classes = Classes.query.filter(Classes.course == course).all()
+    classes = Classes.query.filter(Classes.course.like(f"%{course}%")).all()
     return jsonify([{"code": c.code, "number": c.number, "course": c.course} for c in classes])
 
 @app.route("/api/teacher_classes/<email>", methods=["GET"])

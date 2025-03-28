@@ -28,9 +28,9 @@ def fetch_teacher_classes(teacher_email):
     response = requests.get("http://flask-server:8080/api/teacher_classes/" + teacher_email)
     return response.json() if response.status_code == 200 else {}
 
-def fetch_course_classes(course):
-    response = requests.get("http://flask-server:8080/api/course_classes/" + course)
-    return response.json() if response.status_code == 200 else {}
+#def fetch_course_classes(course):
+#    response = requests.get("http://flask-server:8080/api/course_classes/" + course)
+#    return response.json() if response.status_code == 200 else {}
 
 def fetch_user(user_email):
     response = requests.get("http://flask-server:8080/api/get_user/" + user_email)
