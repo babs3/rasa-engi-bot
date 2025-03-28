@@ -15,7 +15,7 @@ services:
       dockerfile: actions/Dockerfile
     volumes:
       - ./actions:/app/actions
-      - ./vector_store_GEE:/app/vector_store_GEE
+      - ./vector_store:/app/vector_store
       - ./shared:/app/shared
     ports:
       - 5055:5055

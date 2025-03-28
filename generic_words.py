@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 import json
 import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -6,6 +7,9 @@ from collections import defaultdict
 import fitz  # PyMuPDF
 import os
 import numpy as np
+
+load_dotenv()
+CURRENT_CLASS = os.getenv("CURRENT_CLASS")
 
 # Load spaCy model
 nlp = spacy.load("en_core_web_sm")
@@ -67,6 +71,10 @@ def detect_generic_words(documents):
     # Save generic words to file for reuse
     with open(os.path.join(os.path.dirname(__file__), "generic_words.json"), "w") as file:
         json.dump(list(generic_words), file)
+
+    print(f"✅ {CURRENT_CLASS} Collection saved to generic_words.json")
+    
+
 
 def custom_tokenizer(text):
     """Tokenize text using spaCy and return individual words."""

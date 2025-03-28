@@ -15,7 +15,7 @@ nlp = spacy.load("en_core_web_sm")
 CURRENT_CLASS = os.getenv("CURRENT_CLASS")
 
 # Load BM25 index
-with open(f"vector_store_{CURRENT_CLASS}/bm25_index.pkl", "rb") as f:
+with open(f"vector_store/bm25_index.pkl", "rb") as f:
     bm25_index, bm25_metadata, bm25_documents = pickle.load(f)
 
 

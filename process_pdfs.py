@@ -84,7 +84,7 @@ def process_pdfs(pdf_folder=f"materials/{CURRENT_CLASS}", vector_db_path="vector
     with open(f"{vector_db_path}/collection_backup.pkl", "wb") as f:
         pickle.dump(collection_data, f)
     
-    print(f"✅ Collection saved to {vector_db_path}/collection_backup.pkl")
+    print(f"✅ {CURRENT_CLASS} Collection saved to {vector_db_path}/collection_backup.pkl")
 
 
 
