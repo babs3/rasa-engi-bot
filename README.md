@@ -75,7 +75,7 @@ docker exec -it rasa-engi-bot-db-1 psql -U admin -d chatbotdb
 ```
 Show the structure of the user table:
 ```
-\d user
+\d users
 ```
 or list all tables:
 ```
@@ -94,9 +94,23 @@ Exit PostgreSQL container:
 \q
 ```
 
+### New way: Adminer view
+Open browser on:
+```
+http://16.171.238.205:8081/
+```
+
 ## Virtual Environment
 
 Activate Virtual Environment
 ```
 conda activate rasa-env
+```
+
+## VM useful commands
+```
+df -h
+```
+```
+htop
 ```

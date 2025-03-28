@@ -49,6 +49,8 @@ services:
     build:
       context: .
       dockerfile: flask_backend/Dockerfile
+    depends_on:
+      - db
     volumes:
       - ./flask_backend:/app/flask_backend
     ports:
