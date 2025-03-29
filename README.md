@@ -17,19 +17,23 @@ docker run -v ${PWD}:/app rasa/rasa:3.6.20-full train
 ```
 Start Containers
 ```
-docker-compose up -d --build
+docker compose up -d --build
 ```
 Pause the containers
 ```
-docker-compose stop
+docker compose stop
 ```
 Stop and Remove Containers Gracefully
 ```
-docker-compose down
+docker compose down
 ```
 If I need to change the database configuration:
 ```
 docker-compose down -v  # Stops all services and removes named volumes
+```
+Check if containers are running
+```
+docker container ls -a
 ```
 
 Open ```http://localhost:8501/``` to test the bot.
@@ -75,7 +79,7 @@ docker exec -it rasa-engi-bot-db-1 psql -U admin -d chatbotdb
 ```
 Show the structure of the user table:
 ```
-\d users
+\d user
 ```
 or list all tables:
 ```
@@ -94,23 +98,9 @@ Exit PostgreSQL container:
 \q
 ```
 
-### New way: Adminer view
-Open browser on:
-```
-http://16.171.238.205:8081/
-```
-
 ## Virtual Environment
 
 Activate Virtual Environment
 ```
 conda activate rasa-env
-```
-
-## VM useful commands
-```
-df -h
-```
-```
-htop
 ```

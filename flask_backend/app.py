@@ -5,6 +5,7 @@ from flask_jwt_extended import JWTManager
 import os
 from flask import jsonify
 from flask import request
+import hashlib
 
 app = Flask(__name__)
 
@@ -118,6 +119,77 @@ def register_teacher():
     db.session.commit()
     return jsonify({"message": "Teacher registered"})
 
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def seed_database():
+    with app.app_context():
+        # Check if table is empty before seeding
+        if not Classes.query.first():
+            classes = [
+                Classes(code="GEE", number="1", course="MEIC"),
+                Classes(code="GEE", number="2", course="MEIC"),
+                Classes(code="SCI", number="1", course="MEIC,MEEC"),
+                Classes(code="SCI", number="2", course="MEIC,MEEC"),
+                Classes(code="LGP", number="1", course="MEIC,MEEC,MM"),
+            ]
+            db.session.bulk_save_objects(classes)
+            db.session.commit()
+            print("Database seeded successfully!")
+        else:
+            print("Database already seeded. Skipping.")
+
+        # Seed Default Student
+        student_email = "student@example.com"
+        default_student = Users.query.filter_by(email=student_email).first()
+        if not default_student:
+            student_user = Users(
+                name="Default Student",
+                role="Student",  # Ensure lowercase matches database
+                email=student_email,
+                password=hash_password("pass")  # Hash password for security
+            )
+            db.session.add(student_user)
+            db.session.commit()  # Commit to get ID
+
+            student_entry = Student(
+                up="000000000",
+                user_id=student_user.id,  # Now it exists
+                course="MEIC",
+                year=1,
+                classes="GEE-1,SCI-1,LGP-1"
+            )
+            db.session.add(student_entry)
+            db.session.commit()
+            print("Default student added!")
+        else:
+            print("Default student already exists. Skipping seeding.")
+
+        # Seed Default Professor
+        professor_email = "professor@example.com"
+        default_professor = Users.query.filter_by(email=professor_email).first()
+        if not default_professor:
+            professor_user = Users(
+                name="Default Professor",
+                role="Teacher",  # Ensure lowercase matches database
+                email=professor_email,
+                password=hash_password("pass")  # Hash password
+            )
+            db.session.add(professor_user)
+            db.session.commit()  # Commit to get ID
+
+            professor_entry = Teacher(
+                user_id=professor_user.id,  # Now it exists
+                classes="GEE-1,GEE-2,SCI-1,SCI-2,LGP-1"
+            )
+            db.session.add(professor_entry)
+            db.session.commit()
+            print("Default professor added!")
+        else:
+            print("Default professor already exists. Skipping seeding.")
+
 
 if __name__ == "__main__":
+    seed_database()
     app.run(host='0.0.0.0', port=8080)
+    
