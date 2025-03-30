@@ -240,6 +240,7 @@ def process_bot_response(trigger, selected_class_name=None, selected_class_numbe
         # clear the selected button payload
         st.session_state["teacher_message_sent"] = False  # Allow re-triggering
     else:
+        st.write("")
         with st.status("Thinking... 🤖", expanded=True) as status:
             response, _ = send_message(trigger, user_email)
 
