@@ -76,10 +76,11 @@ def display_message_separator():
 
 def send_message(user_input, user_email, selected_class_name=None, selected_class_number=None, teacher_question=None):
     url = "http://rasa:5005/webhooks/rest/webhook"
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     payload = {
         "sender": user_email,
         "message": user_input,
-        "metadata": {"input_time":datetime.now(), "selected_class_name": selected_class_name, "selected_class_number": selected_class_number, "teacher_question": teacher_question}
+        "metadata": {"input_time":current_time, "selected_class_name": selected_class_name, "selected_class_number": selected_class_number, "teacher_question": teacher_question}
     }
     headers = {"Content-Type": "application/json"}
 

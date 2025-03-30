@@ -8,6 +8,7 @@ from nltk.corpus import wordnet
 import os
 import json
 import pandas as pd
+from datetime import datetime
 from shared.flask_requests import *
 
 nlp = spacy.load("en_core_web_sm")
@@ -19,7 +20,7 @@ with open(f"vector_store/bm25_index.pkl", "rb") as f:
     bm25_index, bm25_metadata, bm25_documents = pickle.load(f)
 
 
-def save_student_progress(user_email, user_message, bot_response, topic, pfds, input_timestamp):
+def save_student_progress(user_email, user_message, bot_response, topic, pfds, input_time_str):
 
     student = fetch_student(user_email)
     student_up = student.get("student_up")
@@ -43,15 +44,20 @@ def save_student_progress(user_email, user_message, bot_response, topic, pfds, i
             class_id = class_.get("id")
             break
 
-    response_timestamp = datetime.now() - input_timestamp
-    print(f"\n📗 Response time: {response_timestamp.total_seconds()} seconds")
+    # Extracting the timestamp part
+    input_time_cleaned = input_time_str.split("input_time: ")[-1].strip()
+    # Converting to datetime object
+    input_time = datetime.strptime(input_time_cleaned, "%Y-%m-%d %H:%M:%S")
+    # Calculating response time
+    response_timestamp = (datetime.now() - input_time).total_seconds()
+    print(f"\n📗 Response time: {response_timestamp}")
     data = {
         "class_id": class_id,
         "question": user_message,
         "response": bot_response,
         "topic": topic,
         "pdfs": pfds,
-        "response_time": response_timestamp.total_seconds(),
+        "response_time": response_timestamp,
     }
     
     message = save_progress(student_up, data)
