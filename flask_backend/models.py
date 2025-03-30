@@ -50,4 +50,5 @@ class StudentProgress(db.Model):
     response = db.Column(db.Text, nullable=False)
     topic = db.Column(db.String(100), nullable=True)
     pdfs = db.Column(db.String(255), nullable=True)  # Comma-separated PDF references
+    response_time = db.Column(db.DateTime, nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)

@@ -1,19 +1,29 @@
+## Install docker on VM
+```
+sudo apt-get update -y
+sudo apt-get upgrade -y
+sudo apt install git curl unzip tar make sudo vim wget nano -y
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker ubuntu
+newgrp docker
+rm get-docker.sh
+```
+
+## Virtual Environment
+Outside of `rasa-engi-bot` folder create a virtual environment:
+```
+python3 -m venv rasa-env
+```
+
 ## Bot Pipeline
-Set CURRENT_CLASS in .env file
+Generate words and embeddings
 ```
-CURRENT_CLASS=GEE   # GEE, SCI, LGP
-```
-Create vector_store folder
-```
+source rasa-env/bin/activate
+pip install -r requirements.txt
+python -m spacy download en_core_web_sm
+python generic_words.py
 python process_pdfs.py
-```
-Create generic_words.json file (need to use lower python version because of spacy)
-```
-py -3.10 generic_words.py
-```
-Train a model
-```
-docker run -v ${PWD}:/app rasa/rasa:3.6.20-full train
 ```
 Start Containers
 ```
@@ -27,7 +37,6 @@ Stop and Remove Containers Gracefully
 ```
 docker compose down
 ```
-If I need to change the database configuration:
 ```
 docker-compose down -v  # Stops all services and removes named volumes
 ```
@@ -35,72 +44,51 @@ Check if containers are running
 ```
 docker container ls -a
 ```
-
-Open ```http://localhost:8501/``` to test the bot.
-
 **Note:** the `.env` file must be on root directory and must contain keys in the form `key_name=secret_value`
 
-## Flask-Migrate Workflow for Database Updates
-Enter the Flask container
+`.env` file template:
 ```
-docker exec -it rasa-engi-bot-flask-server-1 bash
-```
-Create migrations folder if needed
-```
-flask db init
-```
-After modifying models.py, generate a migration script
-```
-flask db migrate -m "Describe your change here"
-```
-Apply the migration to the database
-```
-flask db upgrade
-```
-If something goes wrong, undo the last migration:
-```
-flask db downgrade
-```
-**NOTE:** If you get some error like ```ERROR [flask_migrate] Error: Can't locate revision identified by [revision-id]```, just run the following:
-```
-flask db revision --rev-id [revision-id]
-```
-```
-flask db migrate
-```
-```
-flask db upgrade
-```
-## How to Visualize the Database?
-
-Access the PostgreSQL container:
-```
-docker exec -it rasa-engi-bot-db-1 psql -U admin -d chatbotdb
-```
-Show the structure of the user table:
-```
-\d user
-```
-or list all tables:
-```
-\dt;
-```
-View all records in the user table:
-```
-SELECT * FROM "user";
-```
-Drop all rows from the table:
-```
-DELETE FROM "user";
-```
-Exit PostgreSQL container:
-```
-\q
+GOOGLE_API_KEY=MY_API_KEY_HERE
+CURRENT_CLASS=SCI   # GEE, SCI, LGP or GEE_LGP
+APP_DATABASE_USER=MY_DB_USER
+APP_DATABASE_PASS=MY_DB_PASSWORD
+APP_DATABASE_NAME=MY_DB_NAME
 ```
 
-## Virtual Environment
 
-Activate Virtual Environment
+## Test the bot
+### Locally:
+Open ```http://localhost/``` to test the bot.
+Open ```http://localhost:8081``` to access the Adminer view of db.
+### On VM:
+Open ```http://13.48.28.234/`` to test the bot.
+Open ```http://13.48.28.234:8081``` to access the Adminer view of db.
+
+
+## Useful commands:
+
+Reports information about space on file system
 ```
-conda activate rasa-env
+df -h
 ```
+Monitor the resources of the Linux operating system in real time
+```
+htop
+```
+
+Command to generate requirements
+```
+pipreqs . --force
+```
+
+Upgrade VM volume storage, after update on AWS:
+```
+sudo growpart /dev/nvme0n1 1
+sudo resize2fs /dev/nvme0n1p1
+```
+
+Train a model (Only train models locally‼️)
+```
+docker run -v ${PWD}:/app rasa/rasa:3.6.20-full train
+```
+
