@@ -50,6 +50,7 @@ class ActionFetchClassMaterial(Action):
 
         user_message = tracker.latest_message.get("text")
         sender_id = tracker.sender_id  # ✅ Retrieves the "sender" field
+        input_time = tracker.latest_message.get("metadata", {}).get("input_time")
         #metadata_email = tracker.latest_message.get("metadata", {}).get("user_email")
 
         print(f"\n🧒 User ({sender_id}) said: {user_message} 📩")
@@ -195,7 +196,8 @@ class ActionFetchClassMaterial(Action):
             SlotSet("materials_location", gemini_results),  # Store selected materials
             SlotSet("bot_response", formatted_response),  # Store the bot response
             SlotSet("sender_id", sender_id),  # Store the sender ID
-            SlotSet("pdfs", pdf_insights)  # Store the pdf insights
+            SlotSet("pdfs", pdf_insights),  # Store the pdf insights
+            SlotSet("input_time", input_time)
             ]
 
 
@@ -210,6 +212,7 @@ class ActionGetClassMaterialLocation(Action):
         bot_response = tracker.get_slot("bot_response")
         sender_id = tracker.get_slot("sender_id")
         pdfs = tracker.get_slot("pdfs")
+        input_time = tracker.get_slot("input_time")
         query = tracker.get_slot("user_query") # already treated in last function
 
         topic = None
@@ -304,9 +307,9 @@ class ActionGetClassMaterialLocation(Action):
             if len(document_entries) > len(selected_materials) * 3: # means that the tokenization went wrong
                 print("\n👻 --> Tokenization went wrong, using pdfs from slot")
                 location_results = selected_materials
-                response = save_student_progress(sender_id, query, bot_response, topic, ", ".join(pdfs))
+                response = save_student_progress(sender_id, query, bot_response, topic, ", ".join(pdfs), input_time)
             else:
-                response = save_student_progress(sender_id, query, bot_response, topic, ", ".join(pdfs_insights))
+                response = save_student_progress(sender_id, query, bot_response, topic, ", ".join(pdfs_insights), input_time)
 
             print("\n🎯 Material location for query found!")
             print("\n📌 FINAL SORTED RESULTS:")
@@ -318,7 +321,7 @@ class ActionGetClassMaterialLocation(Action):
         else:
             print("\n⚠️  No exact references found, but you might check related PDFs.")
             
-            response = save_student_progress(sender_id, query, bot_response, topic, [])
+            response = save_student_progress(sender_id, query, bot_response, topic, [], input_time)
             dispatcher.utter_message(text="I couldn't find specific page references, but check related PDFs.")
 
         #clear the slots

@@ -40,6 +40,11 @@ slots:
     type: list
     mappings:
       - type: custom
+
+  input_time:
+    type: text
+    mappings:
+      - type: custom
   
       
 responses:

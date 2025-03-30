@@ -52,7 +52,7 @@ def get_student_progress(student_up):
 @app.route("/api/save_progress/<student_up>", methods=["POST"])
 def save_progress(student_up):
     data = request.json
-    progress = StudentProgress(student_up=student_up, class_id=data["class_id"], question=data["question"], response=data["response"], topic=data["topic"], pdfs=data["pdfs"])
+    progress = StudentProgress(student_up=student_up, class_id=data["class_id"], question=data["question"], response=data["response"], topic=data["topic"], pdfs=data["pdfs"], response_time=data["response_time"])
     db.session.add(progress)
     db.session.commit()
     return jsonify({"message": "Progress saved"})

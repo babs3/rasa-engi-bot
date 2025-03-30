@@ -79,7 +79,7 @@ def send_message(user_input, user_email, selected_class_name=None, selected_clas
     payload = {
         "sender": user_email,
         "message": user_input,
-        "metadata": {"selected_class_name": selected_class_name, "selected_class_number": selected_class_number, "teacher_question": teacher_question}
+        "metadata": {"input_time":datetime.now(), "selected_class_name": selected_class_name, "selected_class_number": selected_class_number, "teacher_question": teacher_question}
     }
     headers = {"Content-Type": "application/json"}
 

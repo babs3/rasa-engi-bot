@@ -19,7 +19,7 @@ with open(f"vector_store/bm25_index.pkl", "rb") as f:
     bm25_index, bm25_metadata, bm25_documents = pickle.load(f)
 
 
-def save_student_progress(user_email, user_message, bot_response, topic, pfds):
+def save_student_progress(user_email, user_message, bot_response, topic, pfds, input_timestamp):
 
     student = fetch_student(user_email)
     student_up = student.get("student_up")
@@ -43,12 +43,15 @@ def save_student_progress(user_email, user_message, bot_response, topic, pfds):
             class_id = class_.get("id")
             break
 
+    response_timestamp = datetime.now() - input_timestamp
+    print(f"\n📗 Response time: {response_timestamp.total_seconds()} seconds")
     data = {
         "class_id": class_id,
         "question": user_message,
         "response": bot_response,
         "topic": topic,
-        "pdfs": pfds
+        "pdfs": pfds,
+        "response_time": response_timestamp.total_seconds(),
     }
     
     message = save_progress(student_up, data)
