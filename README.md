@@ -27,15 +27,15 @@ APP_DATABASE_NAME=MY_DB_NAME
 ## Virtual Environment
 Outside of `rasa-engi-bot` folder create a virtual environment:
 ```
+cd ..
 sudo apt install python3.10-venv
 python3 -m venv rasa-env
+source rasa-env/bin/activate
 ```
 
 ## Bot Pipeline
 Generate words and embeddings
 ```
-cd ..
-source rasa-env/bin/activate
 cd ./rasa-engi-bot
 pip install -r requirements.txt
 python -m spacy download en_core_web_sm
