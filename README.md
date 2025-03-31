@@ -10,16 +10,33 @@ newgrp docker
 rm get-docker.sh
 ```
 
+## Clone the repository
+Clone the babs3/rasa-engi-bot repository.
+
+Then copy the `.env` file and `materials` folder.
+
+`.env` file template:
+```
+GOOGLE_API_KEY=MY_API_KEY_HERE
+CURRENT_CLASS=SCI   # GEE, SCI, LGP or GEE_LGP
+APP_DATABASE_USER=MY_DB_USER
+APP_DATABASE_PASS=MY_DB_PASSWORD
+APP_DATABASE_NAME=MY_DB_NAME
+```
+
 ## Virtual Environment
 Outside of `rasa-engi-bot` folder create a virtual environment:
 ```
+cd ..
+sudo apt install python3.10-venv
 python3 -m venv rasa-env
+source rasa-env/bin/activate
 ```
 
 ## Bot Pipeline
 Generate words and embeddings
 ```
-source rasa-env/bin/activate
+cd ./rasa-engi-bot
 pip install -r requirements.txt
 python -m spacy download en_core_web_sm
 python generic_words.py
@@ -44,17 +61,6 @@ Check if containers are running
 ```
 docker container ls -a
 ```
-**Note:** the `.env` file must be on root directory and must contain keys in the form `key_name=secret_value`
-
-`.env` file template:
-```
-GOOGLE_API_KEY=MY_API_KEY_HERE
-CURRENT_CLASS=SCI   # GEE, SCI, LGP or GEE_LGP
-APP_DATABASE_USER=MY_DB_USER
-APP_DATABASE_PASS=MY_DB_PASSWORD
-APP_DATABASE_NAME=MY_DB_NAME
-```
-
 
 ## Test the bot
 ### Locally:
