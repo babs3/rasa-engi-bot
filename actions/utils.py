@@ -61,6 +61,7 @@ def save_student_progress(user_email, user_message, bot_response, topic, pfds, i
     }
     
     message = save_progress(student_up, data)
+    print(f"\n📗 Progress saved: {message}")
 
     return message
 

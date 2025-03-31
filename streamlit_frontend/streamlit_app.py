@@ -197,6 +197,7 @@ def chat_interface():
 
         # 🛠️ Check if bot is thinking and process response BEFORE displaying UI
         if st.session_state.get("bot_thinking", False):
+            sleep(1)
             process_bot_response(st.session_state["messages"][-1]["content"])
             return  # Prevents UI from rendering mid-processing
                 
@@ -214,6 +215,7 @@ def trigger_bot_thinking(user_input):
     # Set bot_thinking to True & rerun
     st.session_state["bot_thinking"] = True
     st.rerun()
+
 
 def process_bot_response(trigger, selected_class_name=None, selected_class_number=None, teacher_question=None):
     """Handles bot response automatically when bot_thinking is True."""
@@ -238,6 +240,7 @@ def process_bot_response(trigger, selected_class_name=None, selected_class_numbe
         # clear the selected button payload
         st.session_state["teacher_message_sent"] = False  # Allow re-triggering
     else:
+        st.write("")
         with st.status("Thinking... 🤖", expanded=True) as status:
             response, _ = send_message(trigger, user_email)
 

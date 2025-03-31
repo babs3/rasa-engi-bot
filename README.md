@@ -82,6 +82,11 @@ Monitor the resources of the Linux operating system in real time
 htop
 ```
 
+Gain space by removing all unused containers, networks, images (both dangling and unused), and optionally, volumes.
+```
+docker system prune
+```
+
 Command to generate requirements
 ```
 pipreqs . --force
