@@ -32,9 +32,14 @@ def get_teacher_classes(email):
     teacher = Teacher.query.join(Users).filter(Users.email == email).first()
     if not teacher:
         return jsonify({"error": "Teacher not found"}), 404
-    print(teacher.classes) 
-    classes = teacher.classes.split(",")
-    classes = Classes.query.filter(Classes.code.in_(classes)).all()
+    
+    # Extract class codes (assuming they are stored as comma-separated values)
+    class_codes = [code.split("-")[0] for code in teacher.classes.split(",") if code.strip()]
+    # remove duplicates
+    class_codes = list(set(class_codes))
+
+    # Query Classes table for matching codes
+    classes = Classes.query.filter(Classes.code.in_(class_codes)).all()
 
     return jsonify([{"id": c.id, "code": c.code, "number": c.number, "course": c.course} for c in classes])
 
