@@ -338,7 +338,6 @@ def set_teacher_insights(user_email):
 
     # Fetch teacher's classes
     teacher_classes = fetch_teacher_classes(user_email)
-    st.info(teacher_classes)
     if not teacher_classes:
         st.info(f"No classes found for teacher: {user_email}")
         return 

@@ -10,10 +10,14 @@ newgrp docker
 rm get-docker.sh
 ```
 
-## Clone the repository
-Clone the babs3/rasa-engi-bot repository.
+## Connect to repository
+Clone the babs3/rasa-engi-bot repository. Then run the following commands:
+```
+git config --global user.name "babs3"
+git config --global user.email "barbaraema3@gmail.com"
+```
 
-Then copy the `.env` file and `materials` folder.
+Copy the `.env` file and `materials` folder.
 
 `.env` file template:
 ```
@@ -44,6 +48,10 @@ python process_pdfs.py
 ```
 Start Containers
 ```
+docker compose up -d
+```
+Build Containers
+```
 docker compose up -d --build
 ```
 Pause the containers
@@ -55,7 +63,7 @@ Stop and Remove Containers Gracefully
 docker compose down
 ```
 ```
-docker-compose down -v  # Stops all services and removes named volumes
+docker compose down -v  # Stops all services and removes named volumes
 ```
 Check if containers are running
 ```
@@ -66,9 +74,12 @@ docker container ls -a
 ### Locally:
 Open ```http://localhost/``` to test the bot.
 Open ```http://localhost:8081``` to access the Adminer view of db.
-### On VM:
-Open ```http://13.48.28.234/`` to test the bot.
-Open ```http://13.48.28.234:8081``` to access the Adminer view of db.
+### Development Server:
+Open ```http://51.20.77.97/`` to test the bot.
+Open ```http://51.20.77.97:8081``` to access the Adminer view of db.
+### Production Server:
+Open ```http://13.61.195.140/`` to test the bot.
+Open ```http://13.61.195.140:8081``` to access the Adminer view of db.
 
 
 ## Useful commands:
@@ -82,7 +93,7 @@ Monitor the resources of the Linux operating system in real time
 htop
 ```
 
-Gain space by removing all unused containers, networks, images (both dangling and unused), and optionally, volumes.
+Gain space by removing all unused containers, networks and images (both dangling and unused).
 ```
 docker system prune
 ```
