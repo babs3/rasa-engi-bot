@@ -78,21 +78,21 @@ Open ```http://localhost/``` to test the bot.
 Open ```http://localhost:8081``` to access the Adminer view of db.
 
 ### Development Server:
-Open ```http://51.20.92.206/`` to test the bot.
+Open ```http://51.20.92.206/``` to test the bot.
 Open ```http://51.20.92.206:8081``` to access the Adminer view of db.
 
 ### Production Server:
 
 #### GEE
-Open ```http://13.61.195.140/`` to test the bot.
+Open ```http://13.61.195.140/``` to test the bot.
 Open ```http://13.61.195.140:8081``` to access the Adminer view of db.
 
 #### LGP
-Open ```http://13.61.195.140/`` to test the bot.
+Open ```http://13.61.195.140/``` to test the bot.
 Open ```http://13.61.195.140:8081``` to access the Adminer view of db.
 
 #### SCI
-Open ```http://13.61.195.140/`` to test the bot.
+Open ```http://13.61.195.140/``` to test the bot.
 Open ```http://13.61.195.140:8081``` to access the Adminer view of db.
 
 

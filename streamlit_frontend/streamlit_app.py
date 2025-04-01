@@ -38,13 +38,13 @@ def main():
     if "input_disabled" not in st.session_state:
         st.session_state.input_disabled = "False"
         
-    if "logged_in_with_google" not in st.session_state:
-        st.session_state.logged_in_with_google = "False"
+    if "logged_in_with_google" not in cookies:
+        cookies["logged_in_with_google"] = "False"
 
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
         
-    if st.session_state.get("logged_in_with_google") == "False":
+    if cookies.get("logged_in_with_google") == "True":
         email = st.experimental_user.get("email")
         # check if email is already registered
         user = fetch_user(email)
@@ -541,7 +541,7 @@ def login_form():
 def login_with_google():
     st.subheader("Or login using Google")
     if st.button("Log in with Google"):
-        st.session_state["logged_in_with_google"] = True
+        cookies["logged_in_with_google"] = "True"
         st.login()
          
 def complete_registration():
@@ -617,15 +617,15 @@ def complete_registration():
     
 def logout():
     
-    st.info(st.session_state["logged_in_with_google"])
+    st.info(cookies["logged_in_with_google"])
     sleep(3)
-    if st.session_state.get("logged_in_with_google"):
+    if cookies.get("logged_in_with_google") == "True":
         #st.experimental_user.logout()
         st.logout()
-        st.session_state["logged_in_with_google"] = False
+        cookies["logged_in_with_google"] = "False"
         
     st.session_state.clear()
-    cookies["logged_in"] = False
+    cookies["logged_in"] = "False"
     cookies["user_email"] = ""
     cookies["display_message_separator"] = "True"
     cookies.save()    
