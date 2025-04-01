@@ -45,39 +45,53 @@ pip install -r requirements.txt
 python -m spacy download en_core_web_sm
 python generic_words.py
 python process_pdfs.py
+deactivate
 ```
 Start Containers
 ```
-docker compose up -d
+sudo docker compose up -d
 ```
 Build Containers
 ```
-docker compose up -d --build
+sudo docker compose up -d --build
 ```
 Pause the containers
 ```
-docker compose stop
+sudo docker compose stop
 ```
 Stop and Remove Containers Gracefully
 ```
-docker compose down
+sudo docker compose down
 ```
 ```
-docker compose down -v  # Stops all services and removes named volumes
+sudo docker compose down -v  # Stops all services and removes named volumes
 ```
 Check if containers are running
 ```
-docker container ls -a
+sudo docker container ls -a
 ```
 
 ## Test the bot
+
 ### Locally:
 Open ```http://localhost/``` to test the bot.
 Open ```http://localhost:8081``` to access the Adminer view of db.
+
 ### Development Server:
 Open ```http://51.20.77.97/`` to test the bot.
 Open ```http://51.20.77.97:8081``` to access the Adminer view of db.
+
 ### Production Server:
+
+#### GEE
+Open ```http://13.61.195.140/`` to test the bot.
+Open ```http://13.61.195.140:8081``` to access the Adminer view of db.
+
+#### LGP
+Open ```http://13.61.195.140/`` to test the bot.
+Open ```http://13.61.195.140:8081``` to access the Adminer view of db.
+
+#### SCI
 Open ```http://13.61.195.140/`` to test the bot.
 Open ```http://13.61.195.140:8081``` to access the Adminer view of db.
 
