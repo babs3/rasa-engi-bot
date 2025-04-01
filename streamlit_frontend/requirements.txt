@@ -6,3 +6,4 @@ streamlit-cookies-manager
 streamlit_extras
 flask_sqlalchemy
 flask
+python-dotenv

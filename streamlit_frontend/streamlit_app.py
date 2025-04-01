@@ -4,8 +4,12 @@ st.set_page_config("Engi-bot", '🤖', layout="wide")
 from streamlit_scroll_to_top import scroll_to_here
 import pandas as pd
 from streamlit_cookies_manager import EncryptedCookieManager
+from dotenv import load_dotenv
 
 from streamlit_utils import *
+
+load_dotenv()
+CURRENT_CLASS = os.getenv("CURRENT_CLASS")
 
 # Generate a strong secret key for your application
 SECRET_KEY = "your_strong_secret_key_here" # ??
@@ -444,6 +448,8 @@ def register_form():
         # Get classes from Flask API
         available_classes = fetch_classes()
         df_classes = pd.DataFrame(available_classes)
+        # filter classes by code (equal to CURRENT_CLASS)
+        df_classes = df_classes[df_classes["code"] == CURRENT_CLASS]
 
         # Create class code-number pairs
         df_classes["class_code_number"] = df_classes["code"] + "-" + df_classes["number"]
