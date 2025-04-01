@@ -2,3 +2,4 @@
 materials
 vector_store
 generic_words.json
+secrets.toml

@@ -1,15 +1,3 @@
-## Install docker on VM
-```
-sudo apt-get update -y
-sudo apt-get upgrade -y
-sudo apt install git curl unzip tar make sudo vim wget nano -y
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-sudo usermod -aG docker ubuntu
-newgrp docker
-rm get-docker.sh
-```
-
 ## Connect to repository
 Clone the babs3/rasa-engi-bot repository. Then run the following commands:
 ```
@@ -26,6 +14,18 @@ CURRENT_CLASS=SCI   # GEE, SCI, LGP or GEE_LGP
 APP_DATABASE_USER=MY_DB_USER
 APP_DATABASE_PASS=MY_DB_PASSWORD
 APP_DATABASE_NAME=MY_DB_NAME
+```
+
+## Install docker on VM
+```
+sudo apt-get update -y
+sudo apt-get upgrade -y
+sudo apt install git curl unzip tar make sudo vim wget nano -y
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker ubuntu
+newgrp docker
+rm get-docker.sh
 ```
 
 ## Virtual Environment
@@ -78,8 +78,8 @@ Open ```http://localhost/``` to test the bot.
 Open ```http://localhost:8081``` to access the Adminer view of db.
 
 ### Development Server:
-Open ```http://51.20.77.97/`` to test the bot.
-Open ```http://51.20.77.97:8081``` to access the Adminer view of db.
+Open ```http://51.20.92.206/`` to test the bot.
+Open ```http://51.20.92.206:8081``` to access the Adminer view of db.
 
 ### Production Server:
 

@@ -8,6 +8,7 @@ WORKDIR /app
 COPY ./streamlit_frontend/requirements.txt /app/requirements.txt
 COPY ./streamlit_frontend/streamlit_app.py /app/streamlit_app.py
 COPY ./streamlit_frontend/streamlit_utils.py /app/streamlit_utils.py
+COPY ./streamlit_frontend/.streamlit /app/.streamlit
 COPY ./shared /app/shared
 
 # Install dependencies

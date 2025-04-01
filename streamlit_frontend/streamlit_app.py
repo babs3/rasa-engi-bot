@@ -40,11 +40,25 @@ def main():
 
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
+        
+    if st.session_state.get("logged_in_with_google", False):
+        email = st.experimental_user.get("email")
+        # check if email is already registered
+        user = fetch_user(email)
+        if user:
+            cookies["logged_in"] = "True"
+            cookies["user_email"] = email
+            cookies.save()
+            st.session_state["is_user_registed"] = True 
+        else:
+            st.session_state["is_user_registed"] = False
 
     # Sidebar for logout
     with st.sidebar:
         st.title("Engi-bot")
-        if cookies.get("logged_in") == "True":
+        
+        # user is registed in db
+        if st.experimental_user.get("is_logged_in"): #cookies.get("logged_in") == "True":
             user_email = cookies.get("user_email")
             role = get_user_role(user_email)
             user=fetch_user(user_email)
@@ -55,8 +69,9 @@ def main():
                     st.write(f"Hello Professor **{user.get('name')}**!")
                 #st.write(f"Logged in as **{user_email}**")
             
-            if st.button("Logout"):
-                logout()
+            #if st.button("Logout"):
+            #    logout()
+            st.button("Log out", on_click=st.logout)
             
             if role == "Student":
                 if not is_authorized(user_email):
@@ -68,17 +83,23 @@ def main():
 
         else:
             st.info("Please log in or register.")
+        
 
-    if cookies.get("logged_in") != "True":
+    if not st.experimental_user.get("is_logged_in"):#cookies.get("logged_in") != "True":
         auth_tabs()
     else:
-        chat_interface()
+        if not st.session_state.get("is_user_registed", False):
+            complete_registration()
+        else:
+            chat_interface()
 
 def auth_tabs():
     st.title("🔑 Authentication")
     tab1, tab2 = st.tabs(["Login", "Register"])
     with tab1:
         login_form()
+        # or login using google
+        login_with_google()
     with tab2:
         register_form()
 
@@ -205,7 +226,6 @@ def chat_interface():
             process_bot_response(st.session_state["messages"][-1]["content"])
             return  # Prevents UI from rendering mid-processing
                 
-
 def trigger_bot_thinking(user_input):
     cookies["display_message_separator"] = "False"
 
@@ -219,7 +239,6 @@ def trigger_bot_thinking(user_input):
     # Set bot_thinking to True & rerun
     st.session_state["bot_thinking"] = True
     st.rerun()
-
 
 def process_bot_response(trigger, selected_class_name=None, selected_class_number=None, teacher_question=None):
     """Handles bot response automatically when bot_thinking is True."""
@@ -265,7 +284,6 @@ def process_bot_response(trigger, selected_class_name=None, selected_class_numbe
     st.session_state["bot_thinking"] = False
     st.rerun()
     
-
 def set_student_insights(student_email):
     # UI Layout
     student_progress = fetch_student_progress(student_email)
@@ -490,6 +508,7 @@ def register_form():
         cookies["logged_in"] = "True"
         cookies["user_email"] = email
         cookies.save()
+        st.session_state["is_user_registed"] = True
         st.rerun()
         
 def login_form():
@@ -501,25 +520,135 @@ def login_form():
         if not is_valid_email(email):
             st.error("❌ Invalid email format!")
             return
+        
+        with st.spinner("🔄 Authenticating..."):
+            hashed_password = hash_password(password)
+            user = authenticate_user(email, hashed_password)
+            if user:
+                cookies["logged_in"] = "True"
+                cookies["user_email"] = email
+                cookies.save()
+                st.session_state["is_user_registed"] = True
+                #st.experimental_user["is_logged_in"] = True
+                #st.experimental_user["email"] = email
+                #st.experimental_user["name"] = user.get('name')
+                #st.info(f"Welcome back, {st.experimental_user.get('name')}!")
+                
+                # perform google login
+                st.session_state["logged_in_with_google"] = True
+                st.login(email=email)
+                
+                st.rerun()
+            else:
+                st.error("❌ Invalid email or password!")
+         
+def login_with_google():
+    st.subheader("Or login using Google")
+    if st.button("Log in with Google"):
+        st.session_state["logged_in_with_google"] = True
+        st.login()
+         
+def complete_registration():
+    st.subheader("Login with Your g.uporto Google Account")
+    # Basic user details
+    email = st.experimental_user.get("email")
+    name = st.experimental_user.get("name")
+    st.write("📧 Email: ", email)
+    st.write("👤 Name: ", name)
+    password = st.text_input("🔑 Password", type="password", key="register_password")
+    confirm_password = st.text_input("🔑 Confirm Password", type="password", key="confirm_password")
+    
+    # Additional fields based on role
+    # if email starts with 'up' then it is a student email
+    if st.experimental_user.get("email").startswith("up"):
+        role = "Student"
+        up = st.experimental_user.get("email").split("@")[0]
+        # discard the first 2 characters
+        up = up[2:]
+        st.write("🎓 University ID: ", up)
+        year = st.number_input("📅 Year", min_value=1, max_value=5, step=1, key="register_year")
+        course = st.text_input("📚 Course", key="register_course")
+
+        # Get classes from Flask API
+        available_classes = fetch_classes()
+        df_classes = pd.DataFrame(available_classes)
+        # filter classes by code (equal to CURRENT_CLASS)
+        df_classes = df_classes[df_classes["code"] == CURRENT_CLASS]
+
+        # Create class code-number pairs
+        df_classes["class_code_number"] = df_classes["code"] + "-" + df_classes["number"]
+        class_codes = df_classes["class_code_number"].unique()
+        selected_class_code = st.radio("📖 Select Classes", class_codes, key="register_classes")
+        
+    else: # check how teachers emails are formatted TODO
+        role = "Teacher"
+        # Get classes from Flask API
+        available_classes = fetch_classes()  # Get classes from Flask API
+        class_codes = [c["code"] for c in available_classes]
+        class_codes = list(set(class_codes))  # Remove duplicates
+        selected_class_codes = st.multiselect("📖 Select Classes", class_codes, key="register_classes")
+       
+    if st.button("Register"):
+        if not is_valid_email(email):
+            st.error("❌ Invalid email format!")
+            return
+        #if not is_strong_password(password):
+            #st.error("❌ Password must be at least 8 characters long, contain uppercase and lowercase letters, digits, and special characters.")
+            #return
+        #if not is_valid_up(up):
+            #st.error("❌ Invalid University ID!")
+        if password != confirm_password:
+            st.error("❌ Passwords do not match!")
+            return
+        if fetch_user(email):            
+            st.error("❌ Email already registered! Try logging in.")
+            return
+        
+        # Create new user
         hashed_password = hash_password(password)
-        user = authenticate_user(email, hashed_password)
-        if user:
-            cookies["logged_in"] = "True"
-            cookies["user_email"] = email
-            cookies.save()
-            #st.success("✅ Login successful! Your previous chat history has been loaded.")
-            st.rerun()
-        else:
-            st.error("❌ Invalid email or password!")
-            
+
+        if role == "Student":
+            register_student(name, email, hashed_password, up, course, year, selected_class_code[0])
+        elif role == "Teacher":
+            selected_class_codes = ",".join(selected_class_codes)
+            register_teacher(name, email, hashed_password, selected_class_codes)
+        
+        cookies["logged_in"] = "True"
+        cookies["user_email"] = email
+        cookies.save()
+        st.session_state["is_user_registed"] = True
+        st.rerun()
+    
 def logout():
     st.session_state.clear()
     cookies["logged_in"] = "False"
     cookies["user_email"] = ""
     cookies["display_message_separator"] = "True"
     cookies.save()
+    st.info(st.session_state["logged_in_with_google"])
+    sleep(3)
+    
+    if st.session_state.get("logged_in_with_google"):
+        #st.experimental_user.logout()
+        st.logout()
+        st.session_state["logged_in_with_google"] = False
     sleep(1)
     st.rerun()
+    
+    
+#def login_screen():
+#    st.header("This app is private.")
+#    st.subheader("Please log in.")
+#    st.button("Log in with Google", on_click=st.login)
+#    st.write(st.experimental_user)
+
+#if not st.experimental_user.get("is_logged_in"):
+#    login_screen()
+#else:
+#    st.header(f"Welcome, {st.experimental_user.name}!")
+#    st.button("Log out", on_click=st.logout)
+
 
 if __name__ == "__main__":
     main()
+    
