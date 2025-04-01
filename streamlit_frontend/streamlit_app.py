@@ -37,28 +37,31 @@ def main():
     
     if "input_disabled" not in st.session_state:
         st.session_state.input_disabled = "False"
+        
+    if "logged_in_with_google" not in st.session_state:
+        st.session_state.logged_in_with_google = "False"
 
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
         
-    if st.session_state.get("logged_in_with_google", False):
+    if st.session_state.get("logged_in_with_google") == "False":
         email = st.experimental_user.get("email")
         # check if email is already registered
         user = fetch_user(email)
         if user:
             cookies["logged_in"] = "True"
             cookies["user_email"] = email
+            cookies["is_user_registed"] = "True" 
             cookies.save()
-            st.session_state["is_user_registed"] = True 
         else:
-            st.session_state["is_user_registed"] = False
+            cookies["is_user_registed"] = "False"
 
     # Sidebar for logout
     with st.sidebar:
         st.title("Engi-bot")
         
         # user is registed in db
-        if st.experimental_user.get("is_logged_in"): #cookies.get("logged_in") == "True":
+        if (st.experimental_user.get("is_logged_in") and cookies.get("is_user_registed") == "True") or cookies.get("logged_in") == "True":
             user_email = cookies.get("user_email")
             role = get_user_role(user_email)
             user=fetch_user(user_email)
@@ -69,9 +72,9 @@ def main():
                     st.write(f"Hello Professor **{user.get('name')}**!")
                 #st.write(f"Logged in as **{user_email}**")
             
-            #if st.button("Logout"):
-            #    logout()
-            st.button("Log out", on_click=st.logout)
+            if st.button("Logout"):
+                logout()
+            #st.button("Log out", on_click=st.logout)
             
             if role == "Student":
                 if not is_authorized(user_email):
@@ -85,10 +88,12 @@ def main():
             st.info("Please log in or register.")
         
 
-    if not st.experimental_user.get("is_logged_in"):#cookies.get("logged_in") != "True":
+    if not (st.experimental_user.get("is_logged_in") or cookies.get("logged_in") != "True"):
         auth_tabs()
     else:
-        if not st.session_state.get("is_user_registed", False):
+        if cookies.get("is_user_registed") == False or cookies.get("is_user_registed") == None:
+            st.info("Please complete your registration.")
+            sleep(2)
             complete_registration()
         else:
             chat_interface()
@@ -508,7 +513,7 @@ def register_form():
         cookies["logged_in"] = "True"
         cookies["user_email"] = email
         cookies.save()
-        st.session_state["is_user_registed"] = True
+        cookies["is_user_registed"] = "True"
         st.rerun()
         
 def login_form():
@@ -528,16 +533,7 @@ def login_form():
                 cookies["logged_in"] = "True"
                 cookies["user_email"] = email
                 cookies.save()
-                st.session_state["is_user_registed"] = True
-                #st.experimental_user["is_logged_in"] = True
-                #st.experimental_user["email"] = email
-                #st.experimental_user["name"] = user.get('name')
-                #st.info(f"Welcome back, {st.experimental_user.get('name')}!")
-                
-                # perform google login
-                st.session_state["logged_in_with_google"] = True
-                st.login(email=email)
-                
+                st.session_state["is_user_registed"] = "True"
                 st.rerun()
             else:
                 st.error("❌ Invalid email or password!")
@@ -608,30 +604,32 @@ def complete_registration():
         hashed_password = hash_password(password)
 
         if role == "Student":
-            register_student(name, email, hashed_password, up, course, year, selected_class_code[0])
+            register_student(name, email, hashed_password, up, course, year, selected_class_code)
         elif role == "Teacher":
             selected_class_codes = ",".join(selected_class_codes)
             register_teacher(name, email, hashed_password, selected_class_codes)
         
-        cookies["logged_in"] = "True"
+        cookies["logged_in"] = "True" 
         cookies["user_email"] = email
+        cookies["is_user_registed"] = "True"
         cookies.save()
-        st.session_state["is_user_registed"] = True
         st.rerun()
     
 def logout():
-    st.session_state.clear()
-    cookies["logged_in"] = "False"
-    cookies["user_email"] = ""
-    cookies["display_message_separator"] = "True"
-    cookies.save()
+    
     st.info(st.session_state["logged_in_with_google"])
     sleep(3)
-    
     if st.session_state.get("logged_in_with_google"):
         #st.experimental_user.logout()
         st.logout()
         st.session_state["logged_in_with_google"] = False
+        
+    st.session_state.clear()
+    cookies["logged_in"] = False
+    cookies["user_email"] = ""
+    cookies["display_message_separator"] = "True"
+    cookies.save()    
+    
     sleep(1)
     st.rerun()
     
