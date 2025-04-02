@@ -40,6 +40,12 @@ def main():
         
     if "logged_in_with_google" not in cookies:
         cookies["logged_in_with_google"] = "False"
+    
+    if "is_user_registed" not in cookies:
+        cookies["is_user_registed"] = "False"
+    
+    if "logged_in" not in cookies:
+        cookies["logged_in"] = "False"
 
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
@@ -86,14 +92,11 @@ def main():
 
         else:
             st.info("Please log in or register.")
-        
 
-    if not (st.experimental_user.get("is_logged_in") or cookies.get("logged_in") != "True"):
+    if st.experimental_user.get("is_logged_in") or cookies.get("logged_in") == "False":
         auth_tabs()
     else:
-        if cookies.get("is_user_registed") == False or cookies.get("is_user_registed") == None:
-            st.info("Please complete your registration.")
-            sleep(2)
+        if cookies.get("is_user_registed") == "False":
             complete_registration()
         else:
             chat_interface()
