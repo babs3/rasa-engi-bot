@@ -57,7 +57,7 @@ def load_chat_history(user_email):
 
 def is_valid_up(up):
     # up must be a number of 9 digits
-    return up.isdigit() and len(up) == 9
+    return up.isdigit() #and len(up) == 9
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
