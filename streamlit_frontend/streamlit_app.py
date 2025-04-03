@@ -29,34 +29,14 @@ cookies = get_cookie_manager()
 if not cookies.ready():
     st.warning("Initializing session... Please wait.")
     st.stop()  # Stop execution until cookies are available
-
-
-if cookies.ready() and cookies.get("google_login") == "True":
-    email = st.experimental_user.get("email")
-    cookies["user_email"] = email  # Store email in cookies
-    cookies.save()
-    
-    st.info("Logging in with Google... " + str(email))
-    st.session_state["user_email"] = email
-    st.session_state["google_login"] = True
-    
-    # check if user is registed in db
-    user = fetch_user(email)
-    if user:
-        st.session_state["is_user_registed"] = True
-    else:
-        st.session_state["is_user_registed"] = False
-    st.info("is_user_registed: " + str(st.session_state["is_user_registed"]))
     
             
 # Restore login state from cookies
-if cookies.ready() and cookies.get("user_email") != "":
+if cookies.ready() and cookies.get("user_email") != "" and cookies.get("user_email") != None:
     st.session_state["is_logged_in"] = True
+    st.info(cookies.get("user_email"))
     st.session_state["user_email"] = cookies["user_email"]
     st.info("Logged in as: **" + str(st.session_state["user_email"]) + "**")
-    
-#if cookies.ready() and "is_user_registed" in cookies:
-#    st.session_state["is_user_registed"] = cookies["is_user_registed"] == "True"
 
 # Check login state
 if "is_logged_in" not in st.session_state:
@@ -82,7 +62,7 @@ def main():
         st.title("Engi-bot")
         
         # user is registed in db
-        if st.session_state["is_logged_in"] and st.session_state["is_user_registed"]:
+        if st.session_state["is_logged_in"]:
             user_email = st.session_state["user_email"]
             role = get_user_role(user_email)
             user=fetch_user(user_email)
@@ -108,11 +88,8 @@ def main():
             st.info("Please log in or register.")
         
             
-    if st.session_state["is_logged_in"]: 
-        if not st.session_state["is_user_registed"]: 
-            complete_registration()
-        else:
-            chat_interface()
+    if st.session_state["is_logged_in"]:
+        chat_interface()
     else:
         auth_tabs()
 
@@ -121,8 +98,6 @@ def auth_tabs():
     tab1, tab2 = st.tabs(["Login", "Register"])
     with tab1:
         login_form()
-        # or login using google
-        login_with_google()
     with tab2:
         register_form()
 
@@ -529,7 +504,6 @@ def register_form():
             register_teacher(name, email, hashed_password, selected_class_codes)
 
         st.session_state["is_logged_in"] = True
-        cookies["is_user_registed"] = "True"
         cookies["user_email"] = email  # Store email in cookies
         cookies.save()
         
@@ -551,26 +525,11 @@ def login_form():
             if user:
                 st.session_state["is_logged_in"] = True
                 cookies["user_email"] = email  # Store email in cookies
-                cookies["is_user_registed"] = "True"
                 cookies.save()
                 sleep(1)
             else:
                 st.error("❌ Invalid email or password!")
             st.rerun()
-        
-         
-def login_with_google():
-    st.subheader("Or login using Google")
-    if st.button("Log in with Google"): #, on_click=st.login)
-        cookies["google_login"] = "True"
-        cookies.save()
-        sleep(1)
-        st.login()
-        #email = st.experimental_user.get("email")
-        #st.session_state["is_logged_in"] = True
-        #cookies["user_email"] = email  # Store email in cookies
-        #st.session_state["user_email"] = email
-        #cookies.save()
         
          
 def complete_registration():
@@ -658,32 +617,19 @@ def complete_registration():
         elif role == "Teacher":
             selected_class_codes = ",".join(selected_class_codes)
             register_teacher(name, email, hashed_password, selected_class_codes)
-        
-        cookies["is_user_registed"] = "True"
-        cookies.save()
-        
-        sleep(1)
+    
         st.rerun()
     
 def logout():
         
     st.session_state.clear()
     cookies["user_email"] = ""
-    cookies["is_user_registed"] = "False"
     cookies["display_message_separator"] = "True"
     
     st.info("Logging out...")
     st.info(cookies["user_email"])
-    st.info(cookies["is_user_registed"])
     st.info("Logged out successfully.")
-    #st.info(st.experimental_user.get("is_logged_in"))
-    
-    if st.session_state.get("google_login", False):
-        st.info("Logging out from Google...")
-        cookies["google_login"] = "False"
-        sleep(2)
-        st.logout()
-        
+
     cookies.save() # error points to this line
     
     sleep(1)
