@@ -10,6 +10,7 @@ Copy the `.env` file and `materials` folder.
 `.env` file template:
 ```
 GOOGLE_API_KEY=MY_API_KEY_HERE
+COOKIES_SECRET_KEY=MY_COOKIES_SECRET_KEY_HERE
 CURRENT_CLASS=SCI   # GEE, SCI, LGP or GEE_LGP
 APP_DATABASE_USER=MY_DB_USER
 APP_DATABASE_PASS=MY_DB_PASSWORD
@@ -78,8 +79,8 @@ Open ```http://localhost/``` to test the bot.
 Open ```http://localhost:8081``` to access the Adminer view of db.
 
 ### Development Server:
-Open ```http://51.20.92.206/``` to test the bot.
-Open ```http://51.20.92.206:8081``` to access the Adminer view of db.
+Open ```http://13.50.238.7/``` to test the bot.
+Open ```http://13.50.238.7:8081``` to access the Adminer view of db.
 
 ### Production Server:
 
