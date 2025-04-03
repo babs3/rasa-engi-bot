@@ -10,6 +10,8 @@ class Users(db.Model):
     role = db.Column(db.String(20), nullable=False)  # "student" or "teacher"
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
+    token = db.Column(db.String(200), nullable=True)
+    is_verified = db.Column(db.String(20), default="False") # "True" or "False"
 
 # Message History Table
 class MessageHistory(db.Model):

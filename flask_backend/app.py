@@ -6,8 +6,20 @@ import os
 from flask import jsonify
 from flask import request
 import hashlib
+from flask_mail import Mail, Message
+import secrets
 
 app = Flask(__name__)
+
+# Flask-Mail Configuration
+app.config["MAIL_SERVER"] = "smtp.gmail.com"  # Use your SMTP provider
+app.config["MAIL_PORT"] = 587
+app.config["MAIL_USE_TLS"] = True
+app.config["MAIL_USERNAME"] = "flash.app.noreply@gmail.com"
+app.config["MAIL_PASSWORD"] = "hptf jtwh hujq pvpr"  # App-specific password
+app.config["MAIL_DEFAULT_SENDER"] = "flash.app.noreply@gmail.com"
+
+mail = Mail(app)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = f'postgresql://{os.getenv("POSTGRES_USER")}:{os.getenv("POSTGRES_PASSWORD")}@db/{os.getenv("POSTGRES_DB")}'
 app.config["JWT_SECRET_KEY"] = "super-secret-key"  # Change in production!
@@ -74,7 +86,7 @@ def get_user(email):
     user = Users.query.filter(Users.email == email).first()
     if not user:
         return jsonify({"error": "User not found"}), 404
-    return jsonify({"id": user.id, "name": user.name, "role": user.role, "email": user.email})
+    return jsonify({"id": user.id, "name": user.name, "role": user.role, "email": user.email, "token": user.token, "is_verified": user.is_verified})
 
 @app.route("/api/message_history/<user_id>", methods=["GET"])
 def get_message_history(user_id):
@@ -87,7 +99,7 @@ def authenticate():
     user = Users.query.filter(Users.email == data["email"], Users.password == data["password"]).first()
     if not user:
         return jsonify({"error": "Invalid credentials"}), 401
-    return jsonify({"id": user.id, "name": user.name, "role": user.role, "email": user.email})
+    return jsonify({"id": user.id, "name": user.name, "role": user.role, "email": user.email, "token": user.token, "is_verified": user.is_verified})
 
 @app.route("/api/save_message_history/<user_id>", methods=["POST"])
 def save_message_history(user_id):
@@ -100,7 +112,11 @@ def save_message_history(user_id):
 @app.route("/api/register_student", methods=["POST"])
 def register_student():
     data = request.json
-    user = Users(name=data["name"], role="Student", email=data["email"], password=data["password"])
+    
+    # Generate confirmation token
+    confirmation_token = secrets.token_urlsafe(32)
+    # Store user with `is_verified=False`
+    user = Users(name=data["name"], role="Student", email=data["email"], password=data["password"], token=confirmation_token)
     db.session.add(user)
     db.session.commit()
 
@@ -108,12 +124,32 @@ def register_student():
     student = Student(up=data["up"], user_id=user.id, course=data["course"], year=data["year"], classes=classes)
     db.session.add(student)
     db.session.commit()
-    return jsonify({"message": "Student registered"})
+    
+    return jsonify({"message": "Student registered", "token": confirmation_token})
+
+
+@app.route("/confirm/<token>", methods=["GET"])
+def confirm_email(token):
+    user = Users.query.filter(Users.token == token).first()
+    if not user:
+        return jsonify({"message": "❌ Invalid or expired token"}), 400
+
+    #update_user_verification(user["email"])
+    user.is_verified = True
+    db.session.add(user)
+    db.session.commit()
+    
+    return jsonify({"message": "✅ Email confirmed successfully! You can now log in."}), 200
+
 
 @app.route("/api/register_teacher", methods=["POST"])
 def register_teacher():
     data = request.json
-    user = Users(name=data["name"], role="Teacher", email=data["email"], password=data["password"])
+    
+    # Generate confirmation token
+    confirmation_token = secrets.token_urlsafe(32)
+    # Store user with `is_verified=False`
+    user = Users(name=data["name"], role="Teacher", email=data["email"], password=data["password"], token=confirmation_token)
     db.session.add(user)
     db.session.commit()
 
@@ -122,10 +158,12 @@ def register_teacher():
     teacher = Teacher(user_id=user.id, classes=classes)
     db.session.add(teacher)
     db.session.commit()
-    return jsonify({"message": "Teacher registered"})
+    return jsonify({"message": "Teacher registered", "token": confirmation_token})
+
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
+
 
 def seed_database():
     with app.app_context():
@@ -152,7 +190,9 @@ def seed_database():
                 name="Default Student",
                 role="Student",  # Ensure lowercase matches database
                 email=student_email,
-                password=hash_password("pass")  # Hash password for security
+                password=hash_password("pass"),  # Hash password for security
+                token="default_token",
+                is_verified="True"
             )
             db.session.add(student_user)
             db.session.commit()  # Commit to get ID
@@ -178,7 +218,9 @@ def seed_database():
                 name="Default Professor",
                 role="Teacher",  # Ensure lowercase matches database
                 email=professor_email,
-                password=hash_password("pass")  # Hash password
+                password=hash_password("pass"),  # Hash password
+                token="default_token",
+                is_verified="True"
             )
             db.session.add(professor_user)
             db.session.commit()  # Commit to get ID
