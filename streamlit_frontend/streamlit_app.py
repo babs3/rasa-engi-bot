@@ -30,32 +30,29 @@ if not cookies.ready():
     st.warning("Initializing session... Please wait.")
     st.stop()  # Stop execution until cookies are available
     
-            
 # Restore login state from cookies
 if cookies.ready() and cookies.get("user_email") != "" and cookies.get("user_email") != None:
     st.session_state["is_logged_in"] = True
-    st.info(cookies.get("user_email"))
     st.session_state["user_email"] = cookies["user_email"]
-    st.info("Logged in as: **" + str(st.session_state["user_email"]) + "**")
 
 # Check login state
 if "is_logged_in" not in st.session_state:
     st.session_state["is_logged_in"] = False
+    
+#if "scroll_down" not in st.session_state:
+st.session_state["scroll_down"] = True
+
+st.session_state["display_message_separator"] = cookies.get("display_message_separator") == "True"
+
+if "input_disabled" not in st.session_state:
+    st.session_state.input_disabled = "False"
+
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
 
 
 # Streamlit UI
 def main():
-        
-    #if "scroll_down" not in st.session_state:
-    st.session_state["scroll_down"] = True
-
-    st.session_state["display_message_separator"] = cookies.get("display_message_separator") == "True"
-
-    if "input_disabled" not in st.session_state:
-        st.session_state.input_disabled = "False"
-
-    if "messages" not in st.session_state:
-        st.session_state["messages"] = []
         
     # Sidebar for logout
     with st.sidebar:
@@ -625,28 +622,10 @@ def logout():
     st.session_state.clear()
     cookies["user_email"] = ""
     cookies["display_message_separator"] = "True"
-    
-    st.info("Logging out...")
-    st.info(cookies["user_email"])
-    st.info("Logged out successfully.")
-
     cookies.save() # error points to this line
     
     sleep(1)
     st.rerun()
-    
-    
-#def login_screen():
-#    st.header("This app is private.")
-#    st.subheader("Please log in.")
-#    st.button("Log in with Google", on_click=st.login)
-#    st.write(st.experimental_user)
-
-#if not st.experimental_user.get("is_logged_in"):
-#    login_screen()
-#else:
-#    st.header(f"Welcome, {st.experimental_user.name}!")
-#    st.button("Log out", on_click=st.logout)
 
 
 if __name__ == "__main__":
