@@ -2,7 +2,7 @@ up-streamlit:
 	sudo docker compose up -d streamlit-server
 
 build-streamlit:
-	sudo docker compose up -d streamlit-server --build
+	sudo docker compose up streamlit-server --build
 
 down-streamlit:
 	sudo docker compose down streamlit-server
@@ -12,7 +12,7 @@ up-flask:
 	sudo docker compose up -d flask-server
 
 build-flask:
-	sudo docker compose up -d flask-server --build
+	sudo docker compose up flask-server --build
 
 down-flask:
 	sudo docker compose down flask-server

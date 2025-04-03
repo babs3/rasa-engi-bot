@@ -125,7 +125,7 @@ def register_student():
     db.session.add(student)
     db.session.commit()
     
-    return jsonify({"message": "Student registered", "token": confirmation_token})
+    return send_confirmation_email(data["email"], confirmation_token)
 
 
 @app.route("/confirm/<token>", methods=["GET"])
@@ -136,7 +136,7 @@ def confirm_email(token):
 
     #update_user_verification(user["email"])
     user.is_verified = True
-    db.session.add(user)
+    db.session.add(user) # see if this is needed
     db.session.commit()
     
     return jsonify({"message": "✅ Email confirmed successfully! You can now log in."}), 200
@@ -158,12 +158,39 @@ def register_teacher():
     teacher = Teacher(user_id=user.id, classes=classes)
     db.session.add(teacher)
     db.session.commit()
-    return jsonify({"message": "Teacher registered", "token": confirmation_token})
+    
+    # Send confirmation email
+    message = send_confirmation_email(data["email"], confirmation_token)
+    return jsonify({"message": message}), 200
 
+
+def send_confirmation_email(email, token):
+    #confirmation_url = url_for("confirm_email", token=token, _external=True)
+    confirmation_url = f"http://13.50.238.7/confirm/{token}"
+    subject = "Confirm Your Email"
+    body = f"""
+Hi,
+
+Please confirm your email by clicking the link below:
+
+{confirmation_url}
+
+If you did not request this, please ignore this email.
+
+Best,
+Your Chatbot Team
+    """
+    try:
+        msg = Message(subject, recipients=[email], body=body)
+        mail.send(msg)
+        print(f"Confirmation email sent to {email}")
+        return jsonify({"message": f"✅ Confirmation email sent to {email}"}), 200
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        return jsonify({"message": f"❌ Failed to send email: {e}"}), 500
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
-
 
 def seed_database():
     with app.app_context():

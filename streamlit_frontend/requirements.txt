@@ -8,3 +8,4 @@ flask_sqlalchemy
 flask
 python-dotenv
 Authlib
+flask_mail

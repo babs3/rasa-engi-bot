@@ -5,6 +5,8 @@ from streamlit_scroll_to_top import scroll_to_here
 import pandas as pd
 from streamlit_cookies_manager import EncryptedCookieManager
 from dotenv import load_dotenv
+from flask import url_for
+from flask_mail import Message
 
 from streamlit_utils import *
 
@@ -491,44 +493,17 @@ def register_form():
         hashed_password = hash_password(password)
 
         if role == "Student":
-            confirmation_token = register_student(name, email, hashed_password, up, course, year, selected_class_code)
+            response = register_student(name, email, hashed_password, up, course, year, selected_class_code)
         elif role == "Teacher":
-            confirmation_token = selected_class_codes = ",".join(selected_class_codes)
-            register_teacher(name, email, hashed_password, selected_class_codes)
+            selected_class_codes = ",".join(selected_class_codes)
+            response = register_teacher(name, email, hashed_password, selected_class_codes)
 
-        confirmation_token=confirmation_token["token"]
-        # Send confirmation email
-        st.info(confirmation_token)
-        sleep(3)
-        send_confirmation_email(email, confirmation_token)
-
+        st.info(response.get("message"))
+        sleep(5)
         #st.session_state["is_logged_in"] = True
         #cookies["user_email"] = email  # Store email in cookies
         #cookies.save()
         st.rerun()
-
-def send_confirmation_email(email, token):
-    confirmation_url = url_for("confirm_email", token=token, _external=True)
-    subject = "Confirm Your Email"
-    body = f"""
-Hi,
-
-Please confirm your email by clicking the link below:
-
-{confirmation_url}
-
-If you did not request this, please ignore this email.
-
-Best,
-Your Chatbot Team
-    """
-    try:
-        msg = Message(subject, recipients=[email], body=body)
-        mail.send(msg)
-        st.info(f"✅ Confirmation email sent to {email}")
-    except Exception as e:
-        st.info(f"❌ Failed to send email: {e}")
-    sleep(2)
 
   
 def login_form():
