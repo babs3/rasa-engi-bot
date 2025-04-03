@@ -227,10 +227,6 @@ def trigger_bot_thinking(user_input):
     # Append user message to the chat
     st.session_state["messages"].append({"role": "user", "content": user_input})
 
-    # Display user message
-    with st.chat_message("user"):
-        st.markdown(user_input)
-
     # Set bot_thinking to True & rerun
     st.session_state["bot_thinking"] = True
     st.rerun()
@@ -258,8 +254,8 @@ def process_bot_response(trigger, selected_class_name=None, selected_class_numbe
         # clear the selected button payload
         st.session_state["teacher_message_sent"] = False  # Allow re-triggering
     else:
-        st.write("")
         with st.status("Thinking... 🤖", expanded=True) as status:
+        #with st.spinner("Thinking... 🤖"):
             response, _ = send_message(trigger, user_email)
 
             if response:
