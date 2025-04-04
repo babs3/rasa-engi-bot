@@ -12,7 +12,7 @@ up-flask:
 	sudo docker compose up -d flask-server
 
 build-flask:
-	sudo docker compose up flask-server --build
+	sudo docker compose up -d flask-server --build
 
 down-flask:
 	sudo docker compose down flask-server
