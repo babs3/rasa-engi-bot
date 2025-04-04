@@ -85,16 +85,16 @@ Open ```http://13.50.238.7:8081``` to access the Adminer view of db.
 ### Production Server:
 
 #### GEE
-Open ```http://13.61.195.140/``` to test the bot.
-Open ```http://13.61.195.140:8081``` to access the Adminer view of db.
+Open ```http://13.61.184.206/``` to test the bot.
+Open ```http://13.61.184.206:8081``` to access the Adminer view of db.
 
 #### LGP
-Open ```http://13.61.195.140/``` to test the bot.
-Open ```http://13.61.195.140:8081``` to access the Adminer view of db.
+Open ```http://16.16.67.5/``` to test the bot.
+Open ```http://16.16.67.5:8081``` to access the Adminer view of db.
 
 #### SCI
-Open ```http://13.61.195.140/``` to test the bot.
-Open ```http://13.61.195.140:8081``` to access the Adminer view of db.
+Open ```http://13.49.80.91/``` to test the bot.
+Open ```http://13.49.80.91:8081``` to access the Adminer view of db.
 
 
 ## Useful commands:

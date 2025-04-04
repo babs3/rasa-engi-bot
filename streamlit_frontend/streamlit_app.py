@@ -528,9 +528,9 @@ def register_form():
             selected_class_codes = ",".join(selected_class_codes)
             response = register_teacher(name, email, hashed_password, selected_class_codes)
 
-        #st.info(response.get("message")) # TODO make this an alert instead of info
-        st.toast(response.get("message"))
-        sleep(2)
+        #st.info(response.get("message"))
+        #st.toast(response.get("message"))
+        #sleep(2)
         
         st.session_state["is_logged_in"] = True
         st.session_state["user_email"] = email
