@@ -87,26 +87,26 @@ sudo docker container ls -a
 ## Test the bot
 
 ### Locally:
-Open ```http://localhost/``` to test the bot.
-Open ```http://localhost:8081``` to access the Adminer view of db.
+Open ```http://localhost.duckdns.org/``` to test the bot.
+Open ```http://localhost.duckdns.org:8081``` to access the Adminer view of db.
 
 ### Development Server:
-Open ```http://engi-bot-dev/``` to test the bot.
+Open ```http://engi-bot-dev.duckdns.org/``` to test the bot.
 Open ```http://engi-bot-dev:8081``` to access the Adminer view of db.
 
 ### Production Server:
 
 #### GEE
-Open ```http://engi-bot-gee/``` to test the bot.
-Open ```http://engi-bot-gee:8081``` to access the Adminer view of db.
+Open ```http://engi-bot-gee.duckdns.org/``` to test the bot.
+Open ```http://engi-bot-gee.duckdns.org:8081``` to access the Adminer view of db.
 
 #### LGP
-Open ```http://engi-bot-lgp/``` to test the bot.
-Open ```http://engi-bot-lgp:8081``` to access the Adminer view of db.
+Open ```http://engi-bot-lgp.duckdns.org/``` to test the bot.
+Open ```http://engi-bot-lgp.duckdns.org:8081``` to access the Adminer view of db.
 
 #### SCI
-Open ```http://engi-bot-sci/``` to test the bot.
-Open ```http://engi-bot-sci:8081``` to access the Adminer view of db.
+Open ```http://engi-bot-sci.duckdns.org/``` to test the bot.
+Open ```http://engi-bot-sci.duckdns.org:8081``` to access the Adminer view of db.
 
 
 ## Useful commands:
