@@ -623,9 +623,6 @@ def complete_registration():
             selected_class_codes = ",".join(selected_class_codes)
             register_teacher(name, email, hashed_password, selected_class_codes)
         st.rerun()
-
-
-
   
 def login_form():
     st.subheader("Login to Your Account")

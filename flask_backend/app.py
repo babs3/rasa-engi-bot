@@ -8,6 +8,7 @@ from flask import request
 import hashlib
 from flask_mail import Mail, Message
 import secrets
+import random
 
 app = Flask(__name__)
 
@@ -114,7 +115,8 @@ def register_student():
     data = request.json
     
     # Generate confirmation token
-    confirmation_token = secrets.token_urlsafe(6)
+    #confirmation_token = secrets.token_urlsafe(6)
+    confirmation_token = f"{random.randint(100000, 999999)}"
     # Store user with `is_verified=False`
     user = Users(name=data["name"], role="Student", email=data["email"], password=data["password"], token=confirmation_token)
     db.session.add(user)
@@ -170,7 +172,8 @@ def register_teacher():
     data = request.json
     
     # Generate confirmation token
-    confirmation_token = secrets.token_urlsafe(6)
+    #confirmation_token = secrets.token_urlsafe(6)
+    confirmation_token = f"{random.randint(100000, 999999)}"
     # Store user with `is_verified=False`
     user = Users(name=data["name"], role="Teacher", email=data["email"], password=data["password"], token=confirmation_token)
     db.session.add(user)
@@ -238,7 +241,7 @@ def seed_database():
                 role="Student",  # Ensure lowercase matches database
                 email=student_email,
                 password=hash_password("pass"),  # Hash password for security
-                token="student_default_token",
+                token="000000",
                 is_verified="True"
             )
             db.session.add(student_user)
@@ -266,7 +269,7 @@ def seed_database():
                 role="Teacher",  # Ensure lowercase matches database
                 email=professor_email,
                 password=hash_password("pass"),  # Hash password
-                token="professor_default_token",
+                token="000001",
                 is_verified="True"
             )
             db.session.add(professor_user)

@@ -10,7 +10,7 @@ class Users(db.Model):
     role = db.Column(db.String(20), nullable=False)  # "student" or "teacher"
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
-    token = db.Column(db.String(200), unique=True, nullable=True)
+    token = db.Column(db.Integer(10), unique=True, nullable=True)
     is_verified = db.Column(db.String(20), default="False") # "True" or "False"
     
     # Relationship with Student (cascade delete enabled)
