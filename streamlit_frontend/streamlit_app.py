@@ -32,11 +32,23 @@ if not cookies.ready():
     st.warning("Initializing session... Please wait.")
     st.stop()  # Stop execution until cookies are available
     
-# Restore login state from cookies
+# google login
+if cookies.ready() and st.experimental_user.is_logged_in:
+    email = st.experimental_user.email
+    st.session_state["user_email"] = email
+    st.session_state["is_logged_in"] = True
+    # check if user is registed in db
+    if fetch_user(email):
+        st.session_state["is_user_registed"] = True
+    else:
+        st.session_state["is_user_registed"] = False
+    
+# normal login - Restore login state from cookies
 if cookies.ready() and cookies.get("user_email") != "" and cookies.get("user_email") != None:
     st.session_state["is_logged_in"] = True
     st.session_state["user_email"] = cookies["user_email"]
-
+    st.session_state["is_user_registed"] = True   
+    
 # Check login state
 if "is_logged_in" not in st.session_state:
     st.session_state["is_logged_in"] = False
@@ -79,25 +91,32 @@ def main():
                 set_student_insights(user_email)
             elif role == "Teacher":
                 set_teacher_insights(user_email) 
-
         else:
             st.info("Please log in or register.")
         
             
     if st.session_state["is_logged_in"]:
         # check if user is verified
-        if not is_authorized(st.session_state["user_email"]):
-            # let user input the verification code
-            st.text_input("Enter the verification code sent to your email:", key="verification_code")
-            if st.button("Verify"):
-                verification_code = st.session_state["verification_code"]
-                if verify_user(st.session_state["user_email"], verification_code):
-                    st.success("Email verified successfully!")
-                    st.rerun()
-                else:
-                    st.error("Invalid verification code. Please check your email.")
-        else:
+        if is_authorized(st.session_state["user_email"]):
             chat_interface()
+        else:            
+            if st.session_state["is_user_registed"]:
+                # let user input the verification code
+                st.text_input(f"Enter the verification code sent to {st.session_state['user_email']}:", key="verification_code")
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("Verify"):
+                        verification_code = st.session_state["verification_code"]
+                        if not verify_user(st.session_state["user_email"], verification_code):
+                            st.error("Invalid verification code. Please check your email.")
+                        else:
+                            st.rerun()
+                with col2:
+                    if st.button("Cancel"):
+                        logout()
+            else:
+                complete_registration()       
+            
     else:
         auth_tabs()
 
@@ -106,6 +125,8 @@ def auth_tabs():
     tab1, tab2 = st.tabs(["Login", "Register"])
     with tab1:
         login_form()
+        st.subheader("Login using Google")
+        st.button("Log in with Google", on_click=st.login)
     with tab2:
         register_form()
 
@@ -507,46 +528,23 @@ def register_form():
             selected_class_codes = ",".join(selected_class_codes)
             response = register_teacher(name, email, hashed_password, selected_class_codes)
 
-        st.info(response.get("message")) # TODO make this an alert instead of info
-        sleep(1)
+        #st.info(response.get("message")) # TODO make this an alert instead of info
+        st.toast(response.get("message"))
+        sleep(2)
+        
         st.session_state["is_logged_in"] = True
         st.session_state["user_email"] = email
-        #cookies["user_email"] = email  # Store email in cookies
-        #cookies.save()
+        st.session_state["is_user_registed"] = True
+        
         st.rerun()
-
-  
-def login_form():
-    st.subheader("Login to Your Account")
-    email = st.text_input("📧 Email", key="login_email")
-    password = st.text_input("🔒 Password", type="password", key="login_password")
-
-    if st.button("Login"):
-        if not is_valid_email(email):
-            st.error("❌ Invalid email format!")
-            return
         
-        with st.spinner("🔄 Authenticating..."):
-            hashed_password = hash_password(password)
-            user = authenticate_user(email, hashed_password)
-            if user:
-                if not user["is_verified"]:
-                    st.error("📩 Please confirm your email before logging in!")
-                    return
-                st.session_state["is_logged_in"] = True
-                cookies["user_email"] = email  # Store email in cookies
-                cookies.save()
-                sleep(1)
-            else:              
-                st.error("❌ Invalid email or password!")
-            st.rerun()
-        
-         
 def complete_registration():
     st.subheader("Login with Your g.uporto Google Account")
+    if st.button("Cancel"):
+        logout()
     # Basic user details
-    email = st.experimental_user.get("email")
-    name = st.experimental_user.get("name")
+    email = st.experimental_user.email
+    name = st.experimental_user.name
     st.write("📧 Email: ", email)
     st.write("👤 Name: ", name)
     password = st.text_input("🔑 Password", type="password", key="register_password")
@@ -554,9 +552,9 @@ def complete_registration():
     
     # Additional fields based on role
     # if email starts with 'up' then it is a student email
-    if st.experimental_user.get("email").startswith("up"):
+    if st.experimental_user.email.startswith("up"):
         role = "Student"
-        up = st.experimental_user.get("email").split("@")[0]
+        up = st.experimental_user.email.split("@")[0]
         # discard the first 2 characters
         up = up[2:]
         st.write("🎓 University ID: ", up)
@@ -602,16 +600,10 @@ def complete_registration():
             class_codes = list(set(class_codes))  # Remove duplicates
             selected_class_codes = st.multiselect("📖 Select Classes", class_codes, key="register_classes")
 
-       
     if st.button("Register"):
         if not is_valid_email(email):
             st.error("❌ Invalid email format!")
             return
-        #if not is_strong_password(password):
-            #st.error("❌ Password must be at least 8 characters long, contain uppercase and lowercase letters, digits, and special characters.")
-            #return
-        #if not is_valid_up(up):
-            #st.error("❌ Invalid University ID!")
         if password != confirm_password:
             st.error("❌ Passwords do not match!")
             return
@@ -627,9 +619,36 @@ def complete_registration():
         elif role == "Teacher":
             selected_class_codes = ",".join(selected_class_codes)
             register_teacher(name, email, hashed_password, selected_class_codes)
-    
         st.rerun()
-    
+
+
+
+  
+def login_form():
+    st.subheader("Login to Your Account")
+    email = st.text_input("📧 Email", key="login_email")
+    password = st.text_input("🔒 Password", type="password", key="login_password")
+
+    if st.button("Login"):
+        if not is_valid_email(email):
+            st.error("❌ Invalid email format!")
+            return
+        
+        with st.spinner("🔄 Authenticating..."):
+            hashed_password = hash_password(password)
+            user = authenticate_user(email, hashed_password)
+            if user:
+                if not user["is_verified"]:
+                    st.error("📩 Please confirm your email before logging in!")
+                    return
+                st.session_state["is_logged_in"] = True
+                cookies["user_email"] = email  # Store email in cookies
+                cookies.save()
+                sleep(1)
+            else:              
+                st.error("❌ Invalid email or password!")
+            st.rerun()
+        
 def logout():
         
     st.session_state.clear()
@@ -638,6 +657,8 @@ def logout():
     cookies.save() # error points to this line
     
     sleep(1)
+    if st.experimental_user.is_logged_in:
+        st.logout()
     st.rerun()
 
 

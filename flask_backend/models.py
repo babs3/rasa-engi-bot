@@ -12,6 +12,12 @@ class Users(db.Model):
     password = db.Column(db.String(200), nullable=False)
     token = db.Column(db.String(200), unique=True, nullable=True)
     is_verified = db.Column(db.String(20), default="False") # "True" or "False"
+    
+    # Relationship with Student (cascade delete enabled)
+    student = db.relationship('Student', backref='user', uselist=False, cascade="all, delete-orphan", passive_deletes=True )
+    teacher = db.relationship('Teacher', backref='user', uselist=False, cascade="all, delete-orphan", passive_deletes=True )
+
+
 
 # Message History Table
 class MessageHistory(db.Model):
@@ -24,7 +30,7 @@ class MessageHistory(db.Model):
 # Student Table (Extends Users)
 class Student(db.Model):
     up = db.Column(db.String(50), primary_key=True)  # Unique student identifier
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete="CASCADE"), nullable=False, unique=True)
     course = db.Column(db.String(100), nullable=False)
     year = db.Column(db.Integer, nullable=False)
     classes = db.Column(db.String, nullable=False) # Comma-separated class code-number
@@ -33,7 +39,7 @@ class Student(db.Model):
 # Teacher Table (Extends Users)
 class Teacher(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete="CASCADE"), nullable=False, unique=True)
     classes = db.Column(db.String, nullable=False) # Comma-separated class codes
 
 # Classes Table

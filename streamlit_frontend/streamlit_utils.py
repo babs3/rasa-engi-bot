@@ -17,7 +17,6 @@ def is_authorized(student_email):
     if not user:
         #st.info("❌ User not found.")
         return False
-    
     if user.get("is_verified") == "False":
         #st.info("❌ User not verified.")
         return False
@@ -28,7 +27,7 @@ def is_authorized(student_email):
 def verify_user(user_email, verification_code):
     user = fetch_user(user_email)
     if not user:
-        st.error("❌ User not found.")
+        #st.error("❌ User not found.")
         return False
     
     # Check if the verification code matches
