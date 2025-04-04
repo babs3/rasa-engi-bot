@@ -17,6 +17,18 @@ APP_DATABASE_PASS=MY_DB_PASSWORD
 APP_DATABASE_NAME=MY_DB_NAME
 ```
 
+Create a folder named `.streamlit` inside `./streamlit_frontend`. Inside `.streamlit`, create a `secrets.toml` file.
+
+`secrets.toml` file template:
+```
+[auth]
+redirect_uri = "http://DOMAIN_HERE/oauth2callback"
+cookie_secret = MY_COOKIES_SECRET_KEY_HERE
+client_id = MY_CLIENT_ID_HERE
+client_secret = MY_CLIENT_SECRET_HERE
+server_metadata_url = "https://accounts.google.com/.well-known/openid-configuration"`
+```
+
 ## Install docker on VM
 ```
 sudo apt-get update -y
@@ -79,22 +91,22 @@ Open ```http://localhost/``` to test the bot.
 Open ```http://localhost:8081``` to access the Adminer view of db.
 
 ### Development Server:
-Open ```http://13.50.238.7/``` to test the bot.
-Open ```http://13.50.238.7:8081``` to access the Adminer view of db.
+Open ```http://13.50.238.7/``` or ```http://engi-bot-dev/``` to test the bot.
+Open ```http://13.50.238.7:8081``` or ```http://engi-bot-dev:8081``` to access the Adminer view of db.
 
 ### Production Server:
 
 #### GEE
-Open ```http://13.61.184.206/``` to test the bot.
-Open ```http://13.61.184.206:8081``` to access the Adminer view of db.
+Open ```http://13.61.184.206/``` or ```http://engi-bot-gee/``` to test the bot.
+Open ```http://13.61.184.206:8081``` or ```http://engi-bot-gee:8081``` to access the Adminer view of db.
 
 #### LGP
-Open ```http://16.16.67.5/``` to test the bot.
-Open ```http://16.16.67.5:8081``` to access the Adminer view of db.
+Open ```http://16.16.67.5/``` or ```http://engi-bot-lgp/``` to test the bot.
+Open ```http://16.16.67.5:8081``` or ```http://engi-bot-lgp:8081``` to access the Adminer view of db.
 
 #### SCI
-Open ```http://13.49.80.91/``` to test the bot.
-Open ```http://13.49.80.91:8081``` to access the Adminer view of db.
+Open ```http://13.49.80.91/```  or ```http://engi-bot-sci/``` to test the bot.
+Open ```http://13.49.80.91:8081``` or ```http://engi-bot-sci:8081``` to access the Adminer view of db.
 
 
 ## Useful commands:
