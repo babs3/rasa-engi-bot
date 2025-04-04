@@ -187,8 +187,6 @@ def register_teacher():
 
 
 def send_confirmation_email(email, token):
-    #confirmation_url = url_for("confirm_email", token=token, _external=True)
-    #confirmation_url = f"http://botauth.duckdns.org/confirm/{token}"
     subject = "Verify Your Email"
     body = f"""
 Hi,
