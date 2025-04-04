@@ -57,7 +57,10 @@ if "is_logged_in" not in st.session_state:
 st.session_state["scroll_down"] = True
 
 st.session_state["display_message_separator"] = cookies.get("display_message_separator") == "True"
+st.session_state["display_message_separator"] = cookies.get("display_message_separator") == "True"
 
+if "input_disabled" not in st.session_state:
+    st.session_state.input_disabled = "False"
 if "input_disabled" not in st.session_state:
     st.session_state.input_disabled = "False"
 
@@ -649,6 +652,9 @@ def login_form():
                 st.error("❌ Invalid email or password!")
             st.rerun()
         
+
+        st.rerun()
+    
 def logout():
         
     st.session_state.clear()
