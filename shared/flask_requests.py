@@ -63,3 +63,7 @@ def register_student(name, email, password, up, course, year, classes):
 def register_teacher(name, email, password, classes):
     response = requests.post("http://flask-server:8080/api/register_teacher", json={"name": name, "email": email, "password": password, "classes": classes})
     return response.json() if response.status_code == 200 else {}
+
+def update_user_verification(email, verification_code):
+    response = requests.post("http://flask-server:8080/api/update_user_verification", json={"email": email, "verification_code": verification_code})
+    return response.json() if response.status_code == 200 else {}

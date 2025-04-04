@@ -2,7 +2,7 @@ up-streamlit:
 	sudo docker compose up -d streamlit-server
 
 build-streamlit:
-	sudo docker compose up streamlit-server --build
+	sudo docker compose up -d streamlit-server --build
 
 down-streamlit:
 	sudo docker compose down streamlit-server
@@ -46,3 +46,6 @@ build-all:
 
 down-all:
 	sudo docker compose down
+
+clean:
+	sudo docker system prune

@@ -114,7 +114,7 @@ def register_student():
     data = request.json
     
     # Generate confirmation token
-    confirmation_token = secrets.token_urlsafe(32)
+    confirmation_token = secrets.token_urlsafe(6)
     # Store user with `is_verified=False`
     user = Users(name=data["name"], role="Student", email=data["email"], password=data["password"], token=confirmation_token)
     db.session.add(user)
@@ -130,16 +130,39 @@ def register_student():
 
 @app.route("/confirm/<token>", methods=["GET"])
 def confirm_email(token):
-    user = Users.query.filter(Users.token == token).first()
-    if not user:
-        return jsonify({"message": "❌ Invalid or expired token"}), 400
-
-    #update_user_verification(user["email"])
-    user.is_verified = True
-    db.session.add(user) # see if this is needed
-    db.session.commit()
+    print("🚀 Route hit!")  # Debug print
     
-    return jsonify({"message": "✅ Email confirmed successfully! You can now log in."}), 200
+    user = Users.query.filter_by(token=token).first()
+    if not user:
+        print("❌ Invalid or expired token")
+        return "<h2>❌ Invalid or expired token</h2>", 400
+
+    print(f"🔹 User found: {user.email}, Verified status before: {user.is_verified}")
+    
+    try:
+        user.is_verified = True
+        db.session.commit()
+        print("✅ User verification updated successfully!")
+
+        return "<h2>✅ Email confirmed successfully! You can now log in.</h2>", 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Database Error: {str(e)}")
+        return f"<h2>❌ Database Error: {str(e)}</h2>", 500
+
+@app.route("/api/update_user_verification", methods=["POST"])
+def update_user_verification():
+    data = request.json
+    user = Users.query.filter_by(email=data["email"]).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    if user.token == data["verification_code"]:
+        user.is_verified = "True"
+        db.session.commit()
+        return jsonify({"message": "User verified successfully"}), 200
+    else:
+        return jsonify({"error": "Invalid verification code"}), 400
 
 
 @app.route("/api/register_teacher", methods=["POST"])
@@ -147,7 +170,7 @@ def register_teacher():
     data = request.json
     
     # Generate confirmation token
-    confirmation_token = secrets.token_urlsafe(32)
+    confirmation_token = secrets.token_urlsafe(6)
     # Store user with `is_verified=False`
     user = Users(name=data["name"], role="Teacher", email=data["email"], password=data["password"], token=confirmation_token)
     db.session.add(user)
@@ -160,20 +183,19 @@ def register_teacher():
     db.session.commit()
     
     # Send confirmation email
-    message = send_confirmation_email(data["email"], confirmation_token)
-    return jsonify({"message": message}), 200
+    return send_confirmation_email(data["email"], confirmation_token)
 
 
 def send_confirmation_email(email, token):
     #confirmation_url = url_for("confirm_email", token=token, _external=True)
-    confirmation_url = f"http://13.50.238.7/confirm/{token}"
-    subject = "Confirm Your Email"
+    #confirmation_url = f"http://botauth.duckdns.org/confirm/{token}"
+    subject = "Verify Your Email"
     body = f"""
 Hi,
 
-Please confirm your email by clicking the link below:
+This is the verification code for your account:
 
-{confirmation_url}
+{token}
 
 If you did not request this, please ignore this email.
 
@@ -183,7 +205,7 @@ Your Chatbot Team
     try:
         msg = Message(subject, recipients=[email], body=body)
         mail.send(msg)
-        print(f"Confirmation email sent to {email}")
+        #print(f"Confirmation email sent to {email}")
         return jsonify({"message": f"✅ Confirmation email sent to {email}"}), 200
     except Exception as e:
         print(f"Failed to send email: {e}")
@@ -218,7 +240,7 @@ def seed_database():
                 role="Student",  # Ensure lowercase matches database
                 email=student_email,
                 password=hash_password("pass"),  # Hash password for security
-                token="default_token",
+                token="student_default_token",
                 is_verified="True"
             )
             db.session.add(student_user)
@@ -246,7 +268,7 @@ def seed_database():
                 role="Teacher",  # Ensure lowercase matches database
                 email=professor_email,
                 password=hash_password("pass"),  # Hash password
-                token="default_token",
+                token="professor_default_token",
                 is_verified="True"
             )
             db.session.add(professor_user)

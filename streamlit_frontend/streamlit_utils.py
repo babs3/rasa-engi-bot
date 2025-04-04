@@ -13,21 +13,34 @@ from shared.flask_requests import *
 CURRENT_CLASS = os.getenv("CURRENT_CLASS")
 
 def is_authorized(student_email):
-    student = fetch_student(student_email)
-    student_classes = student.get("classes")
-    student_classes = student_classes.split(",") if len(student_classes) > 1 else student_classes
-
-    authorized = False
-    for class_ in student_classes:
-        code, _ = class_.split("-")
-        if code == CURRENT_CLASS:
-            authorized = True
-            break
-    if not authorized:
-        st.info(f"❌ Student not in the current class: {CURRENT_CLASS}")
+    user = fetch_user(student_email)
+    if not user:
+        #st.info("❌ User not found.")
         return False
-    return True
     
+    if user.get("is_verified") == "False":
+        #st.info("❌ User not verified.")
+        return False
+    else:
+        #st.info("✅ User verified.")
+        return True
+
+def verify_user(user_email, verification_code):
+    user = fetch_user(user_email)
+    if not user:
+        st.error("❌ User not found.")
+        return False
+    
+    # Check if the verification code matches
+    if user.get("token") == verification_code:
+        # Update user verification status
+        update_user_verification(user_email, verification_code)
+        #st.success("✅ User verified successfully.")
+        return True
+    else:
+        #st.error("❌ Invalid verification code.")
+        return False
+
 def get_user_role(user_email):
     user = fetch_user(user_email)
     if user:

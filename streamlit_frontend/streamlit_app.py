@@ -61,7 +61,7 @@ def main():
         st.title("Engi-bot")
         
         # user is registed in db
-        if st.session_state["is_logged_in"]:
+        if st.session_state["is_logged_in"] and is_authorized(st.session_state["user_email"]):
             user_email = st.session_state["user_email"]
             role = get_user_role(user_email)
             user=fetch_user(user_email)
@@ -76,10 +76,7 @@ def main():
                 logout()
             
             if role == "Student":
-                if not is_authorized(user_email):
-                    return
-                else:
-                    set_student_insights(user_email)
+                set_student_insights(user_email)
             elif role == "Teacher":
                 set_teacher_insights(user_email) 
 
@@ -88,7 +85,19 @@ def main():
         
             
     if st.session_state["is_logged_in"]:
-        chat_interface()
+        # check if user is verified
+        if not is_authorized(st.session_state["user_email"]):
+            # let user input the verification code
+            st.text_input("Enter the verification code sent to your email:", key="verification_code")
+            if st.button("Verify"):
+                verification_code = st.session_state["verification_code"]
+                if verify_user(st.session_state["user_email"], verification_code):
+                    st.success("Email verified successfully!")
+                    st.rerun()
+                else:
+                    st.error("Invalid verification code. Please check your email.")
+        else:
+            chat_interface()
     else:
         auth_tabs()
 
@@ -498,9 +507,10 @@ def register_form():
             selected_class_codes = ",".join(selected_class_codes)
             response = register_teacher(name, email, hashed_password, selected_class_codes)
 
-        st.info(response.get("message"))
-        sleep(5)
-        #st.session_state["is_logged_in"] = True
+        st.info(response.get("message")) # TODO make this an alert instead of info
+        sleep(1)
+        st.session_state["is_logged_in"] = True
+        st.session_state["user_email"] = email
         #cookies["user_email"] = email  # Store email in cookies
         #cookies.save()
         st.rerun()
