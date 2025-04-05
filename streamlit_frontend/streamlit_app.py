@@ -79,6 +79,7 @@ def main():
         if st.session_state["is_logged_in"] and is_authorized(st.session_state["user_email"]):
             user_email = st.session_state["user_email"]
             role = get_user_role(user_email)
+            st.info("ROLE: **" + role + "**")
             user=fetch_user(user_email)
             if user:
                 if role == "Student":

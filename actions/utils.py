@@ -23,24 +23,19 @@ with open(f"vector_store/bm25_index.pkl", "rb") as f:
 def save_student_progress(user_email, user_message, bot_response, topic, pfds, input_time_str):
 
     student = fetch_student(user_email)
-    student_up = student.get("student_up")
-    if not student_up:
+    student_id = student.get("id")
+    if not student_id:
         return
 
-    student_classes = student.get("classes")
-    student_classes = student_classes.split(",") if student_classes else []
-    # get class number for the current class
-    for student_class in student_classes:
-        code, num = student_class.split("-")
-        if code == CURRENT_CLASS:
-            class_number = num
-            break
+    student_class = student.get("class_")
+    # get class number
+    class_code, class_number = student_class.split("-")
 
     # get id of the current class
     classes = fetch_classes()
     class_id = None
     for class_ in classes:
-        if class_.get("code") == CURRENT_CLASS and class_.get("number") == class_number:
+        if class_.get("code") == class_code and class_.get("number") == class_number:
             class_id = class_.get("id")
             break
 
@@ -60,7 +55,7 @@ def save_student_progress(user_email, user_message, bot_response, topic, pfds, i
         "response_time": response_timestamp,
     }
     
-    message = save_progress(student_up, data)
+    message = save_progress(student_id, data)
     print(f"\n📗 Progress saved: {message}")
 
     return message

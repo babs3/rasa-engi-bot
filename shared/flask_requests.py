@@ -8,12 +8,12 @@ def fetch_student_progress(student_email):
     student = fetch_student(student_email)
     if not student:
         return {}
-    student_up = student.get("student_up")
-    response = requests.get("http://flask-server:8080/api/student_progress/" + student_up)
+    student_id = str(student.get("id"))
+    response = requests.get("http://flask-server:8080/api/student_progress/" + student_id)
     return response.json() if response.status_code == 200 else {}
 
-def save_progress(student_up, data):
-    response = requests.post("http://flask-server:8080/api/save_progress/" + student_up, json=data)
+def save_progress(student_id, data):
+    response = requests.post("http://flask-server:8080/api/save_progress/" + student_id, json=data)
     return response.json() if response.status_code == 200 else {}
 
 def fetch_classes():

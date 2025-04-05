@@ -62,15 +62,15 @@ def get_class_progress(class_id):
     progress = StudentProgress.query.filter(StudentProgress.class_id == class_id).all()
     return jsonify([{"student_up": p.student_up, "question": p.question, "response": p.response, "topic": p.topic, "pdfs": p.pdfs, "timestamp": p.timestamp} for p in progress])
 
-@app.route("/api/student_progress/<student_up>", methods=["GET"])
-def get_student_progress(student_up):
-    progress = StudentProgress.query.filter(StudentProgress.student_up == student_up).all()
+@app.route("/api/student_progress/<student_id>", methods=["GET"])
+def get_student_progress(student_id):
+    progress = StudentProgress.query.filter(StudentProgress.student_id == int(student_id)).all()
     return jsonify([{"class_id": p.class_id, "question": p.question, "response": p.response, "topic": p.topic, "pdfs": p.pdfs, "timestamp": p.timestamp} for p in progress])
 
-@app.route("/api/save_progress/<student_up>", methods=["POST"])
-def save_progress(student_up):
+@app.route("/api/save_progress/<student_id>", methods=["POST"])
+def save_progress(student_id):
     data = request.json
-    progress = StudentProgress(student_up=student_up, class_id=data["class_id"], question=data["question"], response=data["response"], topic=data["topic"], pdfs=data["pdfs"], response_time=data["response_time"])
+    progress = StudentProgress(student_id=student_id, class_id=data["class_id"], question=data["question"], response=data["response"], topic=data["topic"], pdfs=data["pdfs"], response_time=data["response_time"])
     db.session.add(progress)
     db.session.commit()
     return jsonify({"message": "Progress saved"})
@@ -80,14 +80,14 @@ def get_student(email):
     student = Student.query.join(Users).filter(Users.email == email).first()
     if not student:
         return jsonify({"error": "Student not found"}), 404
-    return jsonify({"user_id": student.user_id, "student_up": student.up, "course": student.course, "year": student.year, "classes": student.classes})
+    return jsonify({"id":str(student.id), "user_id": student.user_id, "student_up": student.up, "course": student.course, "year": student.year, "class_": student.class_})
 
 @app.route("/api/get_user/<email>", methods=["GET"])
 def get_user(email):
     user = Users.query.filter(Users.email == email).first()
     if not user:
         return jsonify({"error": "User not found"}), 404
-    return jsonify({"id": user.id, "name": user.name, "role": user.role, "email": user.email, "token": user.token, "is_verified": user.is_verified})
+    return jsonify({"id": user.id, "name": user.name, "role": user.role, "email": user.email, "otp": user.otp, "is_verified": user.is_verified})
 
 @app.route("/api/message_history/<user_id>", methods=["GET"])
 def get_message_history(user_id):
@@ -100,7 +100,7 @@ def authenticate():
     user = Users.query.filter(Users.email == data["email"], Users.password == data["password"]).first()
     if not user:
         return jsonify({"error": "Invalid credentials"}), 401
-    return jsonify({"id": user.id, "name": user.name, "role": user.role, "email": user.email, "token": user.token, "is_verified": user.is_verified})
+    return jsonify({"id": user.id, "name": user.name, "role": user.role, "email": user.email, "otp": user.otp, "is_verified": user.is_verified})
 
 @app.route("/api/save_message_history/<user_id>", methods=["POST"])
 def save_message_history(user_id):
@@ -114,30 +114,28 @@ def save_message_history(user_id):
 def register_student():
     data = request.json
     
-    # Generate confirmation token
-    #confirmation_token = secrets.token_urlsafe(6)
-    confirmation_token = f"{random.randint(100000, 999999)}"
+    # Generate confirmation otp
+    confirmation_otp = f"{random.randint(100000, 999999)}"
     # Store user with `is_verified=False`
-    user = Users(name=data["name"], role="Student", email=data["email"], password=data["password"], token=confirmation_token)
+    user = Users(name=data["name"], role="Student", email=data["email"], password=data["password"], otp=confirmation_otp)
     db.session.add(user)
     db.session.commit()
 
     classes = ",".join(data["classes"].split(","))
-    student = Student(up=data["up"], user_id=user.id, course=data["course"], year=data["year"], classes=classes)
+    student = Student(user_id=user.id, up=int(data["up"]), course=data["course"], year=data["year"], class_=classes)
     db.session.add(student)
     db.session.commit()
     
-    return send_confirmation_email(data["email"], confirmation_token)
+    return send_confirmation_email(data["email"], confirmation_otp)
 
 
-@app.route("/confirm/<token>", methods=["GET"])
-def confirm_email(token):
+@app.route("/confirm/<otp>", methods=["GET"])
+def confirm_email(otp):
     print("🚀 Route hit!")  # Debug print
     
-    user = Users.query.filter_by(token=token).first()
+    user = Users.query.filter_by(otp=otp).first()
     if not user:
-        print("❌ Invalid or expired token")
-        return "<h2>❌ Invalid or expired token</h2>", 400
+        return "<h2>❌ Invalid or expired otp</h2>", 400
 
     print(f"🔹 User found: {user.email}, Verified status before: {user.is_verified}")
     
@@ -159,7 +157,7 @@ def update_user_verification():
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    if str(user.token) == data["verification_code"]:
+    if str(user.otp) == data["verification_code"]:
         user.is_verified = "True"
         db.session.commit()
         return jsonify({"message": "User verified successfully"}), 200
@@ -171,11 +169,10 @@ def update_user_verification():
 def register_teacher():
     data = request.json
     
-    # Generate confirmation token
-    #confirmation_token = secrets.token_urlsafe(6)
-    confirmation_token = f"{random.randint(100000, 999999)}"
+    # Generate confirmation otp
+    confirmation_otp = f"{random.randint(100000, 999999)}"
     # Store user with `is_verified=False`
-    user = Users(name=data["name"], role="Teacher", email=data["email"], password=data["password"], token=confirmation_token)
+    user = Users(name=data["name"], role="Teacher", email=data["email"], password=data["password"], otp=confirmation_otp)
     db.session.add(user)
     db.session.commit()
 
@@ -186,10 +183,10 @@ def register_teacher():
     db.session.commit()
     
     # Send confirmation email
-    return send_confirmation_email(data["email"], confirmation_token)
+    return send_confirmation_email(data["email"], confirmation_otp)
 
 
-def send_confirmation_email(email, token):
+def send_confirmation_email(email, otp):
 
     subject = "✅ Verify Your Email Address"
     html_body = f"""
@@ -232,7 +229,7 @@ def send_confirmation_email(email, token):
     <h2>🔐 Email Verification</h2>
     <p>Hi there,</p>
     <p>Use the code below to verify your account:</p>
-    <div class="otp">{token}</div>
+    <div class="otp">{otp}</div>
     <p>If you didn’t request this, you can safely ignore this email.</p>
     <p>Thanks,<br><strong>Your Chatbot Team</strong></p>
     <div class="footer">
@@ -281,7 +278,7 @@ def seed_database():
                 role="Student",  # Ensure lowercase matches database
                 email=student_email,
                 password=hash_password("pass"),  # Hash password for security
-                token="000000",
+                otp="000000",
                 is_verified="True"
             )
             db.session.add(student_user)
@@ -292,7 +289,7 @@ def seed_database():
                 user_id=student_user.id,  # Now it exists
                 course="MEIC",
                 year=1,
-                classes="GEE-1,SCI-1,LGP-1"
+                class_="GEE-1" # ,SCI-1,LGP-1
             )
             db.session.add(student_entry)
             db.session.commit()
@@ -309,7 +306,7 @@ def seed_database():
                 role="Teacher",  # Ensure lowercase matches database
                 email=professor_email,
                 password=hash_password("pass"),  # Hash password
-                token="000001",
+                otp="000001",
                 is_verified="True"
             )
             db.session.add(professor_user)
