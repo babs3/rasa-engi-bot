@@ -33,7 +33,7 @@ def verify_user(user_email, verification_code):
     # Check if the verification code matches
     if update_user_verification(user_email, verification_code):
         # Update user verification status
-        st.success("✅ User verified successfully.")
+        #st.success("✅ User verified successfully.")
         return True
     else:
         st.error("❌ Invalid verification code.")
