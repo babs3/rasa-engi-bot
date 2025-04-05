@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template_string
 from flask_backend.models import *
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
@@ -190,21 +190,61 @@ def register_teacher():
 
 
 def send_confirmation_email(email, token):
-    subject = "Verify Your Email"
-    body = f"""
-Hi,
 
-This is the verification code for your account:
-
-{token}
-
-If you did not request this, please ignore this email.
-
-Best,
-Your Chatbot Team
+    subject = "✅ Verify Your Email Address"
+    html_body = f"""
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {{
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      padding: 20px;
+    }}
+    .container {{
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 500px;
+      margin: auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }}
+    .otp {{
+      font-size: 24px;
+      font-weight: bold;
+      background-color: #e8f0fe;
+      padding: 10px;
+      border-radius: 6px;
+      display: inline-block;
+      letter-spacing: 2px;
+    }}
+    .footer {{
+      margin-top: 20px;
+      font-size: 12px;
+      color: #888;
+    }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🔐 Email Verification</h2>
+    <p>Hi there,</p>
+    <p>Use the code below to verify your account:</p>
+    <div class="otp">{otp}</div>
+    <p>If you didn’t request this, you can safely ignore this email.</p>
+    <p>Thanks,<br><strong>Your Chatbot Team</strong></p>
+    <div class="footer">
+      &copy; 2025 Your Chatbot Platform. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>
     """
+
     try:
-        msg = Message(subject, recipients=[email], body=body)
+        msg = Message(subject, recipients=[email], html=html_body)
         mail.send(msg)
         #print(f"Confirmation email sent to {email}")
         return jsonify({"message": f"✅ Confirmation email sent to {email}"}), 200
