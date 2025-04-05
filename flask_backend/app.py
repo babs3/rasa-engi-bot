@@ -159,7 +159,7 @@ def update_user_verification():
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    if user.token == data["verification_code"]:
+    if str(user.token) == data["verification_code"]:
         user.is_verified = "True"
         db.session.commit()
         return jsonify({"message": "User verified successfully"}), 200
@@ -232,7 +232,7 @@ def send_confirmation_email(email, token):
     <h2>🔐 Email Verification</h2>
     <p>Hi there,</p>
     <p>Use the code below to verify your account:</p>
-    <div class="otp">{otp}</div>
+    <div class="otp">{token}</div>
     <p>If you didn’t request this, you can safely ignore this email.</p>
     <p>Thanks,<br><strong>Your Chatbot Team</strong></p>
     <div class="footer">

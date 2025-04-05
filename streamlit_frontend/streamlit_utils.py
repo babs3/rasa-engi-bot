@@ -31,9 +31,8 @@ def verify_user(user_email, verification_code):
         return False
     
     # Check if the verification code matches
-    if str(user.get("token")) == verification_code:
+    if update_user_verification(user_email, verification_code):
         # Update user verification status
-        update_user_verification(user_email, verification_code)
         st.success("✅ User verified successfully.")
         return True
     else:
